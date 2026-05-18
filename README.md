@@ -7,7 +7,7 @@ Tools and expectations: the track uses Python and common tools for production-re
 
 # Week 1
 
-Week 1 — Classification model
+Week 1 - Classification model
 
 In week 1 the focus in on building first supervised machine learning model using the Titanic passenger dataset. The project is split into two parts: first train and evaluate a logistic regression classifier with scikit-learn, then implement logistic regression from scratch with NumPy to understand the algorithmic building blocks (linear score, sigmoid, loss, gradients, and the training loop).
 
