@@ -1,3 +1,5 @@
+"""Constants for the bike rental data."""
+
 F_BIKE_RENTALS = "data/registered_bike_rentals.csv"
 F_BIKE_RENTALS_DIRECT_PICKUP = "data/direct_pickup_bike_rentals.csv"
 F_HOLIDAYS = "data/holidays.csv"

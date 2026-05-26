@@ -1,3 +1,5 @@
+"""List of all the definitions for the bike rental data."""
+
 from dagster import Definitions, definitions
 
 from bike_rental.defs.assets.bike_rental import (
@@ -8,4 +10,8 @@ from bike_rental.defs.assets.bike_rental import (
 
 @definitions
 def defs() -> Definitions:
+    """Define the assets for the bike rental data.
+
+    Return a Definitions object containing the assets.
+    """
     return Definitions(assets=[bike_rental_hourly, direct_pick_up_hourly])
