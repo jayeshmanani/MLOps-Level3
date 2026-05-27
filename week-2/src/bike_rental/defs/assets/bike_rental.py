@@ -44,9 +44,24 @@ def clean_weather_data() -> pd.DataFrame:
     data.
     """
     weather_data = data_import_csv(constants.F_WEATHER)
+    weather_data.drop(columns=["id"], inplace=True)
     weather_data = pd.get_dummies(
         weather_data, columns=["conditions"], dtype=int
     )
     weather_data["datetime"] = pd.to_datetime(weather_data["datetime"])
     # data_store_csv(weather_data, constants.F_raw_path.format("weather_data"))
     return weather_data
+
+
+@dg.asset
+def clean_holiday_data() -> pd.DataFrame:
+    """Load and clean the holiday data.
+
+    It reads the holiday data CSV file, cleans it, and returns the cleaned
+    data.
+    """
+    holiday_data = data_import_csv(constants.F_HOLIDAYS)
+    holiday_data.drop(columns=["id"], inplace=True)
+    holiday_data["date"] = pd.to_datetime(holiday_data["date"])
+    # data_store_csv(holiday_data, constants.F_raw_path.format("holiday_data"))
+    return holiday_data

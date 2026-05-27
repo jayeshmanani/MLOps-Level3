@@ -3,10 +3,8 @@
 import dagster as dg
 import pandas as pd
 
-from bike_rental.defs.assets import constants
 from bike_rental.defs.assets.helper import (
     data_merger,
-    data_store_csv,
 )
 
 
@@ -33,7 +31,7 @@ def merged_hourly(
 
 
 @dg.asset(deps=["transform_operation_data", "clean_weather_data"])
-def merged_hourly_with_weather(
+def merged_with_weather(
     transform_operation_data: pd.DataFrame, clean_weather_data: pd.DataFrame
 ) -> pd.DataFrame:
     """Merge the transformed operation data with weather data.
@@ -48,7 +46,29 @@ def merged_hourly_with_weather(
         how_to="left",
         suffixe_str=("", "_weather"),
     )
-    data_store_csv(
-        merged_data, constants.F_raw_path.format("merged_hourly_with_weather")
+    # data_store_csv(
+    #     merged_data, constants.F_raw_path.format("merged_hourly_with_weather")
+    # )
+    return merged_data
+
+
+@dg.asset(deps=["merged_with_weather", "clean_holiday_data"])
+def merged_with_holiday(
+    merged_with_weather: pd.DataFrame, clean_holiday_data: pd.DataFrame
+) -> pd.DataFrame:
+    """Merge the merged hourly with weather data and holiday data.
+
+    It reads the merged hourly with weather data and holiday data CSV
+    files, merges them, and return the merged data.
+    """
+    merged_data = data_merger(
+        merged_with_weather,
+        clean_holiday_data,
+        on_cols=["date"],
+        how_to="left",
+        suffixe_str=(),
     )
+    # data_store_csv(
+    #     merged_data, constants.F_raw_path.format("merged_with_holiday")
+    # )
     return merged_data

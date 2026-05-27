@@ -3,34 +3,59 @@
 import dagster as dg
 import pandas as pd
 
+from bike_rental.defs.assets import constants
+from bike_rental.defs.assets.helper import data_store_csv
+
 
 @dg.asset(deps=["merged_hourly"])
 def transform_operation_data(merged_hourly: pd.DataFrame) -> pd.DataFrame:
-    """Transform the operation data."""
-    merged_hourly["total_count"] = (
-        merged_hourly["count_rentals"] + merged_hourly["count_pickups"]
+    """Transform the operation data.
+
+    Add new time based features to the operation data, and
+    return the transformed data.
+    """
+    op_data = merged_hourly.copy()
+    op_data["total_count"] = op_data["count_rentals"] + op_data["count_pickups"]
+    op_data["weekday"] = op_data["datetime"].dt.weekday
+    op_data["year"] = op_data["datetime"].dt.year
+    op_data["month"] = op_data["datetime"].dt.month
+    op_data["day"] = op_data["datetime"].dt.day
+    op_data["hour"] = op_data["datetime"].dt.hour
+    op_data["quarter"] = op_data["datetime"].dt.quarter
+    op_data["date"] = op_data["datetime"].dt.date
+    op_data["is_month_start"] = op_data["datetime"].dt.is_month_start.astype(
+        int
     )
-    merged_hourly["weekday"] = merged_hourly["datetime"].dt.weekday
-    merged_hourly["year"] = merged_hourly["datetime"].dt.year
-    merged_hourly["month"] = merged_hourly["datetime"].dt.month
-    merged_hourly["day"] = merged_hourly["datetime"].dt.day
-    merged_hourly["hour"] = merged_hourly["datetime"].dt.hour
-    merged_hourly["quarter"] = merged_hourly["datetime"].dt.quarter
-    merged_hourly["is_month_start"] = merged_hourly[
-        "datetime"
-    ].dt.is_month_start.astype(int)
-    merged_hourly["is_month_end"] = merged_hourly[
-        "datetime"
-    ].dt.is_month_end.astype(int)
-    merged_hourly["time_of_day"] = pd.cut(
-        merged_hourly["hour"],
+    op_data["is_month_end"] = op_data["datetime"].dt.is_month_end.astype(int)
+    op_data["time_of_day"] = pd.cut(
+        op_data["hour"],
         bins=[0, 6, 12, 18, 24],
         labels=["night", "morning", "afternoon", "evening"],
         right=False,
     )
-    merged_hourly = pd.get_dummies(
-        merged_hourly, columns=["time_of_day"], dtype=int
+    op_data = pd.get_dummies(op_data, columns=["time_of_day"], dtype=int)
+    op_data["date"] = pd.to_datetime(op_data["date"])
+    return op_data
+
+
+@dg.asset(deps=["merged_with_holiday"])
+def final_transformed_data(merged_with_holiday: pd.DataFrame) -> None:
+    """Transform the merged data with holiday information."""
+    final_data = merged_with_holiday.copy()
+    final_data["is_holiday"] = final_data["holiday"].notna().astype(int)
+    final_data["holiday_impact"] = final_data.groupby("holiday")[
+        "total_count"
+    ].transform("mean")
+    final_data["holiday_impact"] = final_data["holiday_impact"].fillna(0)
+    final_data["deviation_from_normal"] = (
+        final_data["total_count"] - final_data["holiday_impact"]
     )
-    # data_store_csv(merged_hourly,
-    # constants.F_raw_path.format("operation_data"))
-    return merged_hourly
+    final_data["deviation_from_normal"] = final_data[
+        "deviation_from_normal"
+    ].fillna(0)
+    final_data.drop(columns=["holiday"], inplace=True)
+    final_data.drop(columns=["date"], inplace=True)
+    data_store_csv(
+        final_data, constants.F_raw_path.format("final_transformed_data")
+    )
+    return
