@@ -1,6 +1,7 @@
 # Custom
 .DS_Store
 .tmp_dagster_home_l3ow2s_c
+.tmp_*
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
