@@ -31,7 +31,7 @@ def merged_hourly(
 
 
 @dg.asset(deps=["transform_operation_data", "clean_weather_data"])
-def merged_with_weather(
+def weather_enriched_data(
     transform_operation_data: pd.DataFrame, clean_weather_data: pd.DataFrame
 ) -> pd.DataFrame:
     """Merge the transformed operation data with weather data.
@@ -47,14 +47,14 @@ def merged_with_weather(
         suffixe_str=("", "_weather"),
     )
     # data_store_csv(
-    #     merged_data, constants.F_raw_path.format("merged_hourly_with_weather")
+    #     merged_data, constants.F_raw_path.format("wearther_enriched_data")
     # )
     return merged_data
 
 
-@dg.asset(deps=["merged_with_weather", "clean_holiday_data"])
-def merged_with_holiday(
-    merged_with_weather: pd.DataFrame, clean_holiday_data: pd.DataFrame
+@dg.asset(deps=["weather_enriched_data", "clean_holiday_data"])
+def holiday_enriched_data(
+    weather_enriched_data: pd.DataFrame, clean_holiday_data: pd.DataFrame
 ) -> pd.DataFrame:
     """Merge the merged hourly with weather data and holiday data.
 
@@ -62,13 +62,13 @@ def merged_with_holiday(
     files, merges them, and return the merged data.
     """
     merged_data = data_merger(
-        merged_with_weather,
+        weather_enriched_data,
         clean_holiday_data,
         on_cols=["date"],
         how_to="left",
         suffixe_str=(),
     )
     # data_store_csv(
-    #     merged_data, constants.F_raw_path.format("merged_with_holiday")
+    #     merged_data, constants.F_raw_path.format("holiday_enriched_data")
     # )
     return merged_data

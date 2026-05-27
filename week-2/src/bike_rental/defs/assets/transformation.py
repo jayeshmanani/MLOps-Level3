@@ -38,10 +38,10 @@ def transform_operation_data(merged_hourly: pd.DataFrame) -> pd.DataFrame:
     return op_data
 
 
-@dg.asset(deps=["merged_with_holiday"])
-def final_transformed_data(merged_with_holiday: pd.DataFrame) -> None:
+@dg.asset(deps=["holiday_enriched_data"])
+def final_transformed_data(holiday_enriched_data: pd.DataFrame) -> None:
     """Transform the merged data with holiday information."""
-    final_data = merged_with_holiday.copy()
+    final_data = holiday_enriched_data.copy()
     final_data["is_holiday"] = final_data["holiday"].notna().astype(int)
     final_data["holiday_impact"] = final_data.groupby("holiday")[
         "total_count"
