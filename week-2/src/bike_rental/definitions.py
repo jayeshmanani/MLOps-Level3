@@ -4,9 +4,14 @@ from dagster import Definitions, definitions
 
 from bike_rental.defs.assets.bike_rental import (
     bike_rental_hourly,
+    clean_weather_data,
     direct_pick_up_hourly,
-    merged_hourly,
 )
+from bike_rental.defs.assets.data_merging import (
+    merged_hourly,
+    merged_hourly_with_weather,
+)
+from bike_rental.defs.assets.transformation import transform_operation_data
 
 
 @definitions
@@ -20,5 +25,8 @@ def defs() -> Definitions:
             bike_rental_hourly,
             direct_pick_up_hourly,
             merged_hourly,
+            clean_weather_data,
+            merged_hourly_with_weather,
+            transform_operation_data,
         ]
     )
