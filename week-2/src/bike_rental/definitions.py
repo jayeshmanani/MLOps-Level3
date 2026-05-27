@@ -5,6 +5,7 @@ from dagster import Definitions, definitions
 from bike_rental.defs.assets.bike_rental import (
     bike_rental_hourly,
     direct_pick_up_hourly,
+    merged_hourly,
 )
 
 
@@ -14,4 +15,10 @@ def defs() -> Definitions:
 
     Return a Definitions object containing the assets.
     """
-    return Definitions(assets=[bike_rental_hourly, direct_pick_up_hourly])
+    return Definitions(
+        assets=[
+            bike_rental_hourly,
+            direct_pick_up_hourly,
+            merged_hourly,
+        ]
+    )
