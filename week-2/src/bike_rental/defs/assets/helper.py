@@ -3,15 +3,6 @@
 import pandas as pd
 
 
-def data_import_csv(file_path: str) -> pd.DataFrame:
-    """Import the data from the file path and return a pandas DataFrame."""
-    try:
-        data = pd.read_csv(file_path)
-        return data
-    except Exception as e:
-        raise Exception(f"error occured data import: {e}")
-
-
 def data_store_csv(data: pd.DataFrame, file_path: str) -> None:
     """Store the given data in a CSV file at the given file path."""
     try:
