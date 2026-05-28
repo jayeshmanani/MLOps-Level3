@@ -1,4 +1,4 @@
-"""List of all the definitions for the bike rental data."""
+"""List of all definitions for the bike rental data pipeline."""
 
 from dagster import Definitions, definitions
 
@@ -17,6 +17,7 @@ from bike_rental.defs.assets.transformation import (
     final_transformed_data,
     transform_operation_data,
 )
+from bike_rental.defs.resources.csv_io import CSVIO
 
 
 @definitions
@@ -36,5 +37,8 @@ def defs() -> Definitions:
             holiday_enriched_data,
             transform_operation_data,
             final_transformed_data,
-        ]
+        ],
+        resources={
+            "csv_io": CSVIO(base_path="."),
+        },
     )
