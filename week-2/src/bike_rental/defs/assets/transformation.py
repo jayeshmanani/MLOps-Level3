@@ -3,8 +3,8 @@
 import dagster as dg
 import pandas as pd
 
-from bike_rental.defs.assets import constants
 from bike_rental.defs.resources.csv_io import CSVIO
+from bike_rental.defs.resources.project_config import ProjectConfig
 
 
 @dg.asset(deps=["merged_hourly"])
@@ -40,7 +40,7 @@ def transform_operation_data(merged_hourly: pd.DataFrame) -> pd.DataFrame:
 
 @dg.asset(deps=["holiday_enriched_data"])
 def final_transformed_data(
-    csv_io: CSVIO, holiday_enriched_data: pd.DataFrame
+    csv_io: CSVIO, project_config: ProjectConfig, holiday_enriched_data: pd.DataFrame
 ) -> None:
     """Transform the merged data with holiday information."""
     final_data = holiday_enriched_data.copy()
@@ -57,7 +57,5 @@ def final_transformed_data(
     ].fillna(0)
     final_data.drop(columns=["holiday"], inplace=True)
     final_data.drop(columns=["date"], inplace=True)
-    csv_io.write(
-        final_data, constants.F_raw_path.format("final_transformed_data")
-    )
+    csv_io.write(final_data, project_config.raw_path_template.format("final_transformed_data"))
     return

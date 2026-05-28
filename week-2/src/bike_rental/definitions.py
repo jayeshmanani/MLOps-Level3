@@ -18,6 +18,7 @@ from bike_rental.defs.assets.transformation import (
     transform_operation_data,
 )
 from bike_rental.defs.resources.csv_io import CSVIO
+from bike_rental.defs.resources.project_config import ProjectConfig
 
 
 @definitions
@@ -40,5 +41,6 @@ def defs() -> Definitions:
         ],
         resources={
             "csv_io": CSVIO(base_path="."),
+            "project_config": ProjectConfig(),
         },
     )
