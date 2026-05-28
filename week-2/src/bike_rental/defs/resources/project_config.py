@@ -9,6 +9,7 @@ class ProjectConfig(ConfigurableResource):
     These defaults mirror the previous `constants.py` values but allow
     overriding via resource configuration when needed.
     """
+
     base_path: str = "."
     f_bike_rentals: str = "data/registered_bike_rentals.csv"
     f_bike_rentals_direct_pickup: str = "data/direct_pickup_bike_rentals.csv"

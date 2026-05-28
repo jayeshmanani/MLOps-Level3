@@ -25,7 +25,8 @@ def merged_hourly(
         suffixe_str=("_rentals", "_pickups"),
     )
     merged_hourly = merged_data.fillna(0)
-    # csv_io.write(merged_hourly, project_config.raw_path_template.format("merged_hourly"))
+    # csv_io.write(merged_hourly,
+    #           project_config.raw_path_template.format("merged_hourly"))
     return merged_hourly
 
 
@@ -45,7 +46,8 @@ def weather_enriched_data(
         how_to="left",
         suffixe_str=("", "_weather"),
     )
-    # csv_io.write(merged_data, project_config.raw_path_template.format("weather_enriched_data"))
+    # csv_io.write(merged_data,
+    #          project_config.raw_path_template.format("weather_enriched_data"))
     return merged_data
 
 
@@ -64,6 +66,7 @@ def holiday_enriched_data(
         on_cols=["date"],
         how_to="left",
         suffixe_str=(),
-    ) 
-    # csv_io.write(merged_data, project_config.raw_path_template.format("holiday_enriched_data"))
+    )
+    # csv_io.write(merged_data,
+    #          project_config.raw_path_template.format("holiday_enriched_data"))
     return merged_data

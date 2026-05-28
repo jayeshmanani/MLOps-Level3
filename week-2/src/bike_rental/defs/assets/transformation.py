@@ -40,7 +40,9 @@ def transform_operation_data(merged_hourly: pd.DataFrame) -> pd.DataFrame:
 
 @dg.asset(deps=["holiday_enriched_data"])
 def final_transformed_data(
-    csv_io: CSVIO, project_config: ProjectConfig, holiday_enriched_data: pd.DataFrame
+    csv_io: CSVIO,
+    project_config: ProjectConfig,
+    holiday_enriched_data: pd.DataFrame,
 ) -> None:
     """Transform the merged data with holiday information."""
     final_data = holiday_enriched_data.copy()
@@ -57,5 +59,8 @@ def final_transformed_data(
     ].fillna(0)
     final_data.drop(columns=["holiday"], inplace=True)
     final_data.drop(columns=["date"], inplace=True)
-    csv_io.write(final_data, project_config.raw_path_template.format("final_transformed_data"))
+    csv_io.write(
+        final_data,
+        project_config.raw_path_template.format("final_transformed_data"),
+    )
     return
