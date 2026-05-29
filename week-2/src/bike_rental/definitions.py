@@ -13,6 +13,12 @@ from bike_rental.defs.assets.data_merging import (
     merged_hourly,
     weather_enriched_data,
 )
+from bike_rental.defs.assets.raw_data import (
+    raw_bike_rental_data,
+    raw_direct_pick_up_data,
+    raw_holiday_data,
+    raw_weather_data,
+)
 from bike_rental.defs.assets.transformation import (
     final_transformed_data,
     transform_operation_data,
@@ -29,6 +35,10 @@ def defs() -> Definitions:
     """
     return Definitions(
         assets=[
+            raw_bike_rental_data,
+            raw_direct_pick_up_data,
+            raw_holiday_data,
+            raw_weather_data,
             bike_rental_hourly,
             direct_pick_up_hourly,
             merged_hourly,

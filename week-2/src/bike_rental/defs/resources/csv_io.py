@@ -19,11 +19,18 @@ class CSVIO(ConfigurableResource):
 
         and return it as a DataFrame.
         """
-        path = Path(self.base_path) / rel_path
-        return pd.read_csv(path)
+        try:
+            path = Path(self.base_path) / rel_path
+            data = pd.read_csv(path)
+            return data
+        except Exception as e:
+            raise Exception(f"error occurred while reading CSV file: {e}")
 
     def write(self, df: pd.DataFrame, rel_path: str) -> None:
         """Write a DataFrame to a CSV file at the specified path."""
-        path = Path(self.base_path) / rel_path
-        path.parent.mkdir(parents=True, exist_ok=True)
-        df.to_csv(path, index=False)
+        try:
+            path = Path(self.base_path) / rel_path
+            path.parent.mkdir(parents=True, exist_ok=True)
+            df.to_csv(path, index=False)
+        except Exception as e:
+            raise Exception(f"error occurred while writing CSV file: {e}")
