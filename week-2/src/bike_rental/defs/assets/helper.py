@@ -3,15 +3,6 @@
 import pandas as pd
 
 
-def data_store_csv(data: pd.DataFrame, file_path: str) -> None:
-    """Store the given data in a CSV file at the given file path."""
-    try:
-        data.to_csv(file_path, index=False)
-        return
-    except Exception as e:
-        raise Exception(f"error occured data store: {e}")
-
-
 def data_to_hourly(data: pd.DataFrame, datetime_col: str) -> pd.DataFrame:
     """Convert the given data to hourly data and return a pandas DataFrame."""
     try:

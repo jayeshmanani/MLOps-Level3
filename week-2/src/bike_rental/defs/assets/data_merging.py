@@ -21,27 +21,33 @@ def merged_hourly(
     It reads the two hourly data CSV files, merges them, and
     return the merged data.
     """
-    merged_data = data_merger(
-        bike_rental_hourly,
-        direct_pick_up_hourly,
-        on_cols=["datetime", "location_id"],
-        how_to="outer",
-        suffixe_str=("_rentals", "_pickups"),
-    )
-    merged_hourly = merged_data.fillna(0)
-    # csv_io.write(merged_hourly,
-    #           project_config.raw_path_template.format("merged_hourly"))
-    return MaterializeResult(
-        value=merged_hourly,
-        metadata={
-            "num_rows": MetadataValue.int(len(merged_hourly)),
-            "num_columns": MetadataValue.int(len(merged_hourly.columns)),
-            "cols_dtypes": MetadataValue.json(
-                {col: str(dtype) for col, dtype in merged_hourly.dtypes.items()}
-            ),
-            "data.head()": MetadataValue.md(merged_hourly.head().to_markdown()),
-        },
-    )
+    try:
+        merged_data = data_merger(
+            bike_rental_hourly,
+            direct_pick_up_hourly,
+            on_cols=["datetime", "location_id"],
+            how_to="outer",
+            suffixe_str=("_rentals", "_pickups"),
+        )
+        merged_hourly = merged_data.fillna(0)
+        return MaterializeResult(
+            value=merged_hourly,
+            metadata={
+                "num_rows": MetadataValue.int(len(merged_hourly)),
+                "num_columns": MetadataValue.int(len(merged_hourly.columns)),
+                "cols_dtypes": MetadataValue.json(
+                    {
+                        col: str(dtype)
+                        for col, dtype in merged_hourly.dtypes.items()
+                    }
+                ),
+                "data.head()": MetadataValue.md(
+                    merged_hourly.head().to_markdown()
+                ),
+            },
+        )
+    except Exception as e:
+        raise Exception(f"error occurred while merging hourly data: {e}")
 
 
 @dg.asset(
@@ -56,26 +62,32 @@ def weather_enriched_data(
     It reads the merged hourly data and weather data CSV files, merges
     them, and return the merged data.
     """
-    merged_data = data_merger(
-        transform_operation_data,
-        clean_weather_data,
-        on_cols=["datetime"],
-        how_to="left",
-        suffixe_str=("", "_weather"),
-    )
-    # csv_io.write(merged_data,
-    #          project_config.raw_path_template.format("weather_enriched_data"))
-    return MaterializeResult(
-        value=merged_data,
-        metadata={
-            "num_rows": MetadataValue.int(len(merged_data)),
-            "num_columns": MetadataValue.int(len(merged_data.columns)),
-            "cols_dtypes": MetadataValue.json(
-                {col: str(dtype) for col, dtype in merged_data.dtypes.items()}
-            ),
-            "data.head()": MetadataValue.md(merged_data.head().to_markdown()),
-        },
-    )
+    try:
+        merged_data = data_merger(
+            transform_operation_data,
+            clean_weather_data,
+            on_cols=["datetime"],
+            how_to="left",
+            suffixe_str=("", "_weather"),
+        )
+        return MaterializeResult(
+            value=merged_data,
+            metadata={
+                "num_rows": MetadataValue.int(len(merged_data)),
+                "num_columns": MetadataValue.int(len(merged_data.columns)),
+                "cols_dtypes": MetadataValue.json(
+                    {
+                        col: str(dtype)
+                        for col, dtype in merged_data.dtypes.items()
+                    }
+                ),
+                "data.head()": MetadataValue.md(
+                    merged_data.head().to_markdown()
+                ),
+            },
+        )
+    except Exception as e:
+        raise Exception(f"error occurred while merging weather data: {e}")
 
 
 @dg.asset(
@@ -90,23 +102,29 @@ def holiday_enriched_data(
     It reads the merged hourly with weather data and holiday data CSV
     files, merges them, and return the merged data.
     """
-    merged_data = data_merger(
-        weather_enriched_data,
-        clean_holiday_data,
-        on_cols=["date"],
-        how_to="left",
-        suffixe_str=(),
-    )
-    # csv_io.write(merged_data,
-    #          project_config.raw_path_template.format("holiday_enriched_data"))
-    return MaterializeResult(
-        value=merged_data,
-        metadata={
-            "num_rows": MetadataValue.int(len(merged_data)),
-            "num_columns": MetadataValue.int(len(merged_data.columns)),
-            "cols_dtypes": MetadataValue.json(
-                {col: str(dtype) for col, dtype in merged_data.dtypes.items()}
-            ),
-            "data.head()": MetadataValue.md(merged_data.head().to_markdown()),
-        },
-    )
+    try:
+        merged_data = data_merger(
+            weather_enriched_data,
+            clean_holiday_data,
+            on_cols=["date"],
+            how_to="left",
+            suffixe_str=(),
+        )
+        return MaterializeResult(
+            value=merged_data,
+            metadata={
+                "num_rows": MetadataValue.int(len(merged_data)),
+                "num_columns": MetadataValue.int(len(merged_data.columns)),
+                "cols_dtypes": MetadataValue.json(
+                    {
+                        col: str(dtype)
+                        for col, dtype in merged_data.dtypes.items()
+                    }
+                ),
+                "data.head()": MetadataValue.md(
+                    merged_data.head().to_markdown()
+                ),
+            },
+        )
+    except Exception as e:
+        raise Exception(f"error occurred while merging holiday data: {e}")
