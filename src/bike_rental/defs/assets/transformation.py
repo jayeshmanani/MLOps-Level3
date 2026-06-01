@@ -59,25 +59,23 @@ def curated_rental_dataset(
 ) -> None:
     """Write the final curated rental dataset to disk."""
     try:
-        final_data = rentals_with_holidays.copy()
-        final_data["is_holiday"] = final_data["holiday"].notna().astype(int)
-        final_data["holiday_impact"] = final_data.groupby("holiday")[
+        data = rentals_with_holidays.copy()
+        data["is_holiday"] = data["holiday"].notna().astype(int)
+        data["holiday_impact"] = data.groupby("holiday")[
             "total_count"
         ].transform("mean")
-        final_data["holiday_impact"] = final_data["holiday_impact"].fillna(0)
-        final_data["deviation_from_normal"] = (
-            final_data["total_count"] - final_data["holiday_impact"]
+        data["holiday_impact"] = data["holiday_impact"].fillna(0)
+        data["deviation_from_normal"] = (
+            data["total_count"] - data["holiday_impact"]
         )
-        final_data["deviation_from_normal"] = final_data[
-            "deviation_from_normal"
-        ].fillna(0)
-        final_data.drop(columns=["holiday"], inplace=True)
-        final_data.drop(columns=["date"], inplace=True)
+        data["deviation_from_normal"] = data["deviation_from_normal"].fillna(0)
+        data.drop(columns=["holiday"], inplace=True)
+        data.drop(columns=["date"], inplace=True)
         csv_io.write(
-            final_data,
-            project_config.raw_path_template.format("curated_rental_dataset"),
+            data,
+            project_config.curated_path,
         )
-        context.add_output_metadata(metadata=metadata_extractor(final_data))
+        context.add_output_metadata(metadata=metadata_extractor(data))
         return None
     except Exception as e:
         raise RuntimeError(f"Error in writing curated rental dataset: {e}")

@@ -15,4 +15,5 @@ class ProjectConfig(ConfigurableResource):
     f_bike_rentals_direct_pickup: str = "data/direct_pickup_bike_rentals.csv"
     f_holidays: str = "data/holidays.csv"
     f_weather: str = "data/weather.csv"
+    curated_path: str = "data/raw/curated_rental_dataset.csv"
     raw_path_template: str = "data/raw/raw_{}.csv"

@@ -13,6 +13,10 @@ from bike_rental.defs.assets.data_merging import (
     rentals_with_holidays,
     rentals_with_weather,
 )
+from bike_rental.defs.assets.data_preparation import (
+    clean_curated_data,
+    train_test_split,
+)
 from bike_rental.defs.assets.raw_data import (
     raw_booked_rental_data,
     raw_direct_pickup_data,
@@ -48,6 +52,8 @@ def defs() -> Definitions:
             rentals_with_weather,
             rentals_with_holidays,
             curated_rental_dataset,
+            train_test_split,
+            clean_curated_data,
         ],
         resources={
             "csv_io": CSVIO(base_path="."),
