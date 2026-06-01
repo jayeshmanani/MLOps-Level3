@@ -66,7 +66,7 @@ def train_test_split(
     context, clean_curated_data: pd.DataFrame, project_config: ProjectConfig
 ) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
     """Split the cleaned curated dataset into training and testing sets."""
-    data = clean_curated_data.sort_values("datetime")
+    data = clean_curated_data.copy()
 
     split_index = int(len(data) * 0.7)
 
