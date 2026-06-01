@@ -19,6 +19,7 @@ def _add_time_based_features(op_data: pd.DataFrame) -> pd.DataFrame:
         op_data["day"] = op_data["datetime"].dt.day
         op_data["quarter"] = op_data["datetime"].dt.quarter
         op_data["date"] = op_data["datetime"].dt.date
+        op_data["hour"] = op_data["datetime"].dt.hour
         op_data["is_month_start"] = op_data[
             "datetime"
         ].dt.is_month_start.astype(int)

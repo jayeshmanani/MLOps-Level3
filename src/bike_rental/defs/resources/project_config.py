@@ -1,5 +1,7 @@
 """Project configuration resource for file paths and environment settings."""
 
+from typing import ClassVar
+
 from dagster import ConfigurableResource
 
 
@@ -17,3 +19,26 @@ class ProjectConfig(ConfigurableResource):
     f_weather: str = "data/weather.csv"
     curated_path: str = "data/raw/curated_rental_dataset.csv"
     raw_path_template: str = "data/raw/raw_{}.csv"
+    FEATURES: ClassVar[list[str]] = [
+        "location_id",
+        "weekday",
+        "year",
+        "month",
+        "day",
+        "quarter",
+        "hour",
+        "is_month_start",
+        "is_month_end",
+        "temperature_c",
+        "perceived_temperature_c",
+        "humidity",
+        "windspeed_kmh",
+        "conditions_clear",
+        "conditions_clouds",
+        "conditions_heavy_rain",
+        "conditions_light_rain",
+        "is_holiday",
+        "holiday_impact",
+        "deviation_from_normal",
+    ]
+    TARGET: ClassVar[str] = "total_count"

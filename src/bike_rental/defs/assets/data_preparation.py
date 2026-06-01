@@ -54,35 +54,38 @@ def clean_curated_data(
 
 @dg.multi_asset(
     outs={
-        "train_data": dg.AssetOut(),
-        "test_data": dg.AssetOut(),
+        "X_train": dg.AssetOut(),
+        "X_test": dg.AssetOut(),
+        "y_train": dg.AssetOut(),
+        "y_test": dg.AssetOut(),
     },
     deps=["clean_curated_data"],
     group_name="data_preparation",
 )
 def train_test_split(
-    context, clean_curated_data: pd.DataFrame
-) -> tuple[pd.DataFrame, pd.DataFrame]:
-    """Split the curated rental dataset into train and test sets.
+    context, clean_curated_data: pd.DataFrame, project_config: ProjectConfig
+) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
+    """Split the cleaned curated dataset into training and testing sets."""
+    data = clean_curated_data.sort_values("datetime")
 
-    It uses a simple time-based split, where the last 20% of the data is used
-    as the test set.
-    """
-    try:
-        data = clean_curated_data.sort_values("datetime")
-        split_index = int(len(data) * 0.8)
-        train_data = data.iloc[:split_index]
-        test_data = data.iloc[split_index:]
-        context.add_output_metadata(
-            output_name="train_data",
-            metadata=metadata_extractor(train_data),
-        )
-        context.add_output_metadata(
-            output_name="test_data",
-            metadata=metadata_extractor(test_data),
-        )
-        return (train_data, test_data)
-    except Exception as e:
-        raise Exception(
-            f"error occurred while splitting train and test data: {e}"
-        )
+    split_index = int(len(data) * 0.7)
+
+    train = data.iloc[:split_index]
+    test = data.iloc[split_index:]
+
+    X_train = train[project_config.FEATURES]
+    y_train = train[project_config.TARGET]
+
+    X_test = test[project_config.FEATURES]
+    y_test = test[project_config.TARGET]
+
+    context.add_output_metadata(
+        output_name="X_train",
+        metadata=metadata_extractor(X_train),
+    )
+    context.add_output_metadata(
+        output_name="X_test",
+        metadata=metadata_extractor(X_test),
+    )
+
+    return X_train, X_test, y_train, y_test
