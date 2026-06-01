@@ -4,6 +4,8 @@ import dagster as dg
 import numpy as np
 from sklearn.metrics import mean_absolute_error, mean_squared_error
 
+from bike_rental.defs.assets.helper import metadata_extractor
+
 
 @dg.asset(group_name="evaluations")
 def linear_regression_metrics(context, linear_regression_model, X_test, y_test):
@@ -15,6 +17,7 @@ def linear_regression_metrics(context, linear_regression_model, X_test, y_test):
 
     context.add_output_metadata(
         {"mae": float(mae), "rmse": float(rmse), "model": "LinearRegression"}
+        | metadata_extractor(X_test)
     )
 
     return {"mae": mae, "rmse": rmse}
@@ -34,6 +37,7 @@ def random_forest_metrics(context, random_forest_model, X_test, y_test):
             "mae": float(mae),
             "rmse": float(rmse),
         }
+        | metadata_extractor(X_test)
     )
 
     return {"mae": mae, "rmse": rmse}
@@ -53,6 +57,7 @@ def xgboost_metrics(context, xgboost_model, X_test, y_test):
             "mae": float(mae),
             "rmse": float(rmse),
         }
+        | metadata_extractor(X_test)
     )
 
     return {"mae": mae, "rmse": rmse}

@@ -5,6 +5,8 @@ from sklearn.ensemble import RandomForestRegressor
 from sklearn.linear_model import LinearRegression
 from xgboost import XGBRegressor
 
+from bike_rental.defs.assets.helper import metadata_extractor
+
 
 @dg.asset(group_name="models")
 def linear_regression_model(context, X_train, y_train):
@@ -19,6 +21,7 @@ def linear_regression_model(context, X_train, y_train):
             "n_features": X_train.shape[1],
             "train_rows": len(X_train),
         }
+        | metadata_extractor(X_train)
     )
 
     return model
@@ -39,6 +42,7 @@ def random_forest_model(context, X_train, y_train):
             "n_estimators": 200,
             "train_rows": len(X_train),
         }
+        | metadata_extractor(X_train)
     )
 
     return model
@@ -65,6 +69,7 @@ def xgboost_model(context, X_train, y_train):
             "learning_rate": 0.05,
             "train_rows": len(X_train),
         }
+        | metadata_extractor(X_train)
     )
 
     return model

@@ -81,11 +81,13 @@ def train_test_split(
 
     context.add_output_metadata(
         output_name="X_train",
-        metadata=metadata_extractor(X_train),
+        metadata=metadata_extractor(X_train)
+        | {"y_train": y_train.head().to_dict()},
     )
     context.add_output_metadata(
         output_name="X_test",
-        metadata=metadata_extractor(X_test),
+        metadata=metadata_extractor(X_test)
+        | {"y_test": y_test.head().to_dict()},
     )
 
     return X_train, X_test, y_train, y_test
