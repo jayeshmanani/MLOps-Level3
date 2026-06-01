@@ -1,4 +1,4 @@
-"""Assets for the bike rental data transformation."""
+"""Assets for the final rental feature engineering stage."""
 
 import dagster as dg
 import pandas as pd
@@ -8,17 +8,16 @@ from bike_rental.defs.resources.csv_io import CSVIO
 from bike_rental.defs.resources.project_config import ProjectConfig
 
 
-@dg.asset(deps=["merged_hourly"], group_name="operation_data")
-def transform_operation_data(
-    context, merged_hourly: pd.DataFrame
+@dg.asset(deps=["operational_rentals_hourly"], group_name="operational_data")
+def operational_rental_features(
+    context, operational_rentals_hourly: pd.DataFrame
 ) -> pd.DataFrame:
-    """Transform the operation data.
+    """Add time-based features to the operational rental data.
 
-    Add new time based features to the operation data, and
-    return the transformed data.
+    This turns the hourly operational totals into a feature table.
     """
     try:
-        op_data = merged_hourly.copy()
+        op_data = operational_rentals_hourly.copy()
         op_data["total_count"] = (
             op_data["count_rentals"] + op_data["count_pickups"]
         )
@@ -46,19 +45,19 @@ def transform_operation_data(
         context.add_output_metadata(metadata=metadata_extractor(op_data))
         return op_data
     except Exception as e:
-        raise RuntimeError(f"Error in transforming operation data: {e}")
+        raise RuntimeError(f"Error in transforming operational data: {e}")
 
 
-@dg.asset(deps=["holiday_enriched_data"], group_name="final_data")
-def final_transformed_data(
+@dg.asset(deps=["rentals_with_holidays"], group_name="final_dataset")
+def curated_rental_dataset(
     context,
     csv_io: CSVIO,
     project_config: ProjectConfig,
-    holiday_enriched_data: pd.DataFrame,
+    rentals_with_holidays: pd.DataFrame,
 ) -> None:
-    """Transform the merged data with holiday information."""
+    """Write the final curated rental dataset to disk."""
     try:
-        final_data = holiday_enriched_data.copy()
+        final_data = rentals_with_holidays.copy()
         final_data["is_holiday"] = final_data["holiday"].notna().astype(int)
         final_data["holiday_impact"] = final_data.groupby("holiday")[
             "total_count"
@@ -74,9 +73,9 @@ def final_transformed_data(
         final_data.drop(columns=["date"], inplace=True)
         csv_io.write(
             final_data,
-            project_config.raw_path_template.format("final_transformed_data"),
+            project_config.raw_path_template.format("curated_rental_dataset"),
         )
         context.add_output_metadata(metadata=metadata_extractor(final_data))
         return None
     except Exception as e:
-        raise RuntimeError(f"Error in transforming final data: {e}")
+        raise RuntimeError(f"Error in writing curated rental dataset: {e}")

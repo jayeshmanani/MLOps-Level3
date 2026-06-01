@@ -1,4 +1,4 @@
-"""Assets for the bike rental data."""
+"""Assets for the bike rental operational data."""
 
 import dagster as dg
 import pandas as pd
@@ -6,54 +6,51 @@ import pandas as pd
 from bike_rental.defs.assets.helper import data_to_hourly, metadata_extractor
 
 
-@dg.asset(group_name="hourly_data")
-def bike_rental_hourly(
-    context, raw_bike_rental_data: pd.DataFrame
+@dg.asset(group_name="operational_data")
+def booked_rental_hourly(
+    context, raw_booked_rental_data: pd.DataFrame
 ) -> pd.DataFrame:
-    """Asset that imports the bike rental data.
+    """Aggregate booked rentals into hourly counts.
 
-    It reads a CSV file and converts it to hourly data, and
-    returns the converted data.
+    It converts the booked rental records into hourly counts.
     """
     try:
-        data = data_to_hourly(raw_bike_rental_data, "datetime")
+        data = data_to_hourly(raw_booked_rental_data, "datetime")
         context.add_output_metadata(metadata=metadata_extractor(data))
         return data
     except Exception as e:
         raise Exception(
-            f"error occurred while converting bike rental data to hourly: {e}"
+            f"error occurred while converting booked rental data to hourly: {e}"
         )
 
 
-@dg.asset(group_name="hourly_data")
-def direct_pick_up_hourly(
-    context, raw_direct_pick_up_data: pd.DataFrame
+@dg.asset(group_name="operational_data")
+def direct_pickup_hourly(
+    context, raw_direct_pickup_data: pd.DataFrame
 ) -> pd.DataFrame:
-    """Asset that imports the direct pick up bike rental data.
+    """Aggregate direct pickups into hourly counts.
 
-    It reads a CSV file, converts it to hourly data, and returns the
-    converted data.
+    It converts the direct pickup records into hourly counts.
     """
     try:
-        data = data_to_hourly(raw_direct_pick_up_data, "datetime")
+        data = data_to_hourly(raw_direct_pickup_data, "datetime")
         context.add_output_metadata(metadata=metadata_extractor(data))
         return data
     except Exception as e:
         raise Exception(
-            f"error occurred while converting direct\
-                  pick up data to hourly: {e}"
+            f"error occurred while converting direct pickup data to hourly: {e}"
         )
 
 
-@dg.asset(group_name="weather_data_addition")
-def clean_weather_data(
+@dg.asset(group_name="context_data")
+def weather_context_data(
     context,
     raw_weather_data: pd.DataFrame,
 ) -> pd.DataFrame:
-    """Load and clean the weather data.
+    """Prepare the weather context data.
 
-    It reads the weather data CSV file, cleans it, and returns the cleaned
-    data.
+    It removes unused columns, encodes weather conditions, and normalizes the
+    timestamp column.
     """
     try:
         raw_weather_data.drop(columns=["id"], inplace=True)
@@ -71,12 +68,13 @@ def clean_weather_data(
         raise Exception(f"error occurred while cleaning weather data: {e}")
 
 
-@dg.asset(group_name="holiday_data_addition")
-def clean_holiday_data(context, raw_holiday_data: pd.DataFrame) -> pd.DataFrame:
-    """Load and clean the holiday data.
+@dg.asset(group_name="context_data")
+def holiday_context_data(
+    context, raw_holiday_data: pd.DataFrame
+) -> pd.DataFrame:
+    """Prepare the holiday context data.
 
-    It reads the holiday data CSV file, cleans it, and returns the cleaned
-    data.
+    It removes unused columns and normalizes the date column.
     """
     try:
         raw_holiday_data.drop(columns=["id"], inplace=True)

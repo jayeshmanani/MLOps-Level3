@@ -1,6 +1,6 @@
 # Bike Rental - Week 2
 
-This folder contains the Week 2 data-preprocessing pipeline for the Bike Rental project (see the full assignment in [project_handout/README.md](project_handout/README.md)). The pipeline is implemented as Dagster assets and uses small helper modules to load, merge and transform CSV data into a final preprocessed dataset.
+This folder contains the Week 2 data-preprocessing pipeline for the Bike Rental project (see the full assignment in [project_handout/README.md](project_handout/README.md)). The pipeline is implemented as Dagster assets and uses small helper modules to load, merge and transform CSV data into a curated rental dataset.
 
 **What this repo contains**
 - Asset definitions (Dagster): [src/bike_rental/definitions.py](src/bike_rental/definitions.py)
@@ -37,7 +37,7 @@ Notes: you can also invoke materialization from the CLI or write a small Python 
 - `data/weather.csv` - historical weather
 - `data/holidays.csv` - holiday calendar
 
-All assets read these CSVs by path (relative to the repository root) using the `csv_io` resource. The final preprocessed CSV is written to `data/raw/raw_final_transformed_data.csv` by the final asset.
+All assets read these CSVs by path (relative to the repository root) using the `csv_io` resource. The final curated CSV is written to `data/raw/curated_rental_dataset.csv` by the final asset.
 
 ## Resource and configuration
 
@@ -46,7 +46,7 @@ This pipeline uses a small Dagster resource to centralize CSV I/O:
 - Resource: `CSVIO` implemented in [src/bike_rental/defs/resources/csv_io.py](src/bike_rental/defs/resources/csv_io.py)
 
 How assets receive the resource:
-- Assets accept the resource directly as a function argument, e.g. `def bike_rental_hourly(csv_io: CSVIO)`. Dagster injects the resource named `csv_io` from `Definitions`.
+- Assets accept the resource directly as a function argument, e.g. `def booked_rental_hourly(csv_io: CSVIO)`. Dagster injects the resource named `csv_io` from `Definitions`.
 
 How the resource is registered:
 - `Definitions` registers `csv_io` in [src/bike_rental/definitions.py](src/bike_rental/definitions.py). By default this project registers `CSVIO(base_path='.')`, so no extra run config is necessary. If you want to override the base path, you can either change `definitions.py` or register an explicit run config.
