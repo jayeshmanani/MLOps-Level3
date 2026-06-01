@@ -2,13 +2,14 @@
 
 import dagster as dg
 import pandas as pd
-from dagster import MaterializeResult, MetadataValue
 
-from bike_rental.defs.assets.helper import data_to_hourly
+from bike_rental.defs.assets.helper import data_to_hourly, metadata_extractor
 
 
 @dg.asset(group_name="hourly_data")
-def bike_rental_hourly(raw_bike_rental_data: pd.DataFrame) -> pd.DataFrame:
+def bike_rental_hourly(
+    context, raw_bike_rental_data: pd.DataFrame
+) -> pd.DataFrame:
     """Asset that imports the bike rental data.
 
     It reads a CSV file and converts it to hourly data, and
@@ -16,17 +17,8 @@ def bike_rental_hourly(raw_bike_rental_data: pd.DataFrame) -> pd.DataFrame:
     """
     try:
         data = data_to_hourly(raw_bike_rental_data, "datetime")
-        return MaterializeResult(
-            value=data,
-            metadata={
-                "num_rows": MetadataValue.int(len(data)),
-                "num_columns": MetadataValue.int(len(data.columns)),
-                "cols_dtypes": MetadataValue.json(
-                    {col: str(dtype) for col, dtype in data.dtypes.items()}
-                ),
-                "data.head()": MetadataValue.md(data.head().to_markdown()),
-            },
-        )
+        context.add_output_metadata(metadata=metadata_extractor(data))
+        return data
     except Exception as e:
         raise Exception(
             f"error occurred while converting bike rental data to hourly: {e}"
@@ -35,7 +27,7 @@ def bike_rental_hourly(raw_bike_rental_data: pd.DataFrame) -> pd.DataFrame:
 
 @dg.asset(group_name="hourly_data")
 def direct_pick_up_hourly(
-    raw_direct_pick_up_data: pd.DataFrame,
+    context, raw_direct_pick_up_data: pd.DataFrame
 ) -> pd.DataFrame:
     """Asset that imports the direct pick up bike rental data.
 
@@ -44,17 +36,8 @@ def direct_pick_up_hourly(
     """
     try:
         data = data_to_hourly(raw_direct_pick_up_data, "datetime")
-        return MaterializeResult(
-            value=data,
-            metadata={
-                "num_rows": MetadataValue.int(len(data)),
-                "num_columns": MetadataValue.int(len(data.columns)),
-                "cols_dtypes": MetadataValue.json(
-                    {col: str(dtype) for col, dtype in data.dtypes.items()}
-                ),
-                "data.head()": MetadataValue.md(data.head().to_markdown()),
-            },
-        )
+        context.add_output_metadata(metadata=metadata_extractor(data))
+        return data
     except Exception as e:
         raise Exception(
             f"error occurred while converting direct\
@@ -64,6 +47,7 @@ def direct_pick_up_hourly(
 
 @dg.asset(group_name="weather_data_addition")
 def clean_weather_data(
+    context,
     raw_weather_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """Load and clean the weather data.
@@ -79,28 +63,16 @@ def clean_weather_data(
         raw_weather_data["datetime"] = pd.to_datetime(
             raw_weather_data["datetime"]
         )
-        return MaterializeResult(
-            value=raw_weather_data,
-            metadata={
-                "num_rows": MetadataValue.int(len(raw_weather_data)),
-                "num_columns": MetadataValue.int(len(raw_weather_data.columns)),
-                "cols_dtypes": MetadataValue.json(
-                    {
-                        col: str(dtype)
-                        for col, dtype in raw_weather_data.dtypes.items()
-                    }
-                ),
-                "data.head()": MetadataValue.md(
-                    raw_weather_data.head().to_markdown()
-                ),
-            },
+        context.add_output_metadata(
+            metadata=metadata_extractor(raw_weather_data)
         )
+        return raw_weather_data
     except Exception as e:
         raise Exception(f"error occurred while cleaning weather data: {e}")
 
 
 @dg.asset(group_name="holiday_data_addition")
-def clean_holiday_data(raw_holiday_data: pd.DataFrame) -> pd.DataFrame:
+def clean_holiday_data(context, raw_holiday_data: pd.DataFrame) -> pd.DataFrame:
     """Load and clean the holiday data.
 
     It reads the holiday data CSV file, cleans it, and returns the cleaned
@@ -109,21 +81,9 @@ def clean_holiday_data(raw_holiday_data: pd.DataFrame) -> pd.DataFrame:
     try:
         raw_holiday_data.drop(columns=["id"], inplace=True)
         raw_holiday_data["date"] = pd.to_datetime(raw_holiday_data["date"])
-        return MaterializeResult(
-            value=raw_holiday_data,
-            metadata={
-                "num_rows": MetadataValue.int(len(raw_holiday_data)),
-                "num_columns": MetadataValue.int(len(raw_holiday_data.columns)),
-                "cols_dtypes": MetadataValue.json(
-                    {
-                        col: str(dtype)
-                        for col, dtype in raw_holiday_data.dtypes.items()
-                    }
-                ),
-                "data.head()": MetadataValue.md(
-                    raw_holiday_data.head().to_markdown()
-                ),
-            },
+        context.add_output_metadata(
+            metadata=metadata_extractor(raw_holiday_data)
         )
+        return raw_holiday_data
     except Exception as e:
         raise Exception(f"error occurred while cleaning holiday data: {e}")

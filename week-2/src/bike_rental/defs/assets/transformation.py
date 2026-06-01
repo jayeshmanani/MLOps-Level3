@@ -2,14 +2,16 @@
 
 import dagster as dg
 import pandas as pd
-from dagster import MaterializeResult, MetadataValue
 
+from bike_rental.defs.assets.helper import metadata_extractor
 from bike_rental.defs.resources.csv_io import CSVIO
 from bike_rental.defs.resources.project_config import ProjectConfig
 
 
 @dg.asset(deps=["merged_hourly"], group_name="operation_data")
-def transform_operation_data(merged_hourly: pd.DataFrame) -> pd.DataFrame:
+def transform_operation_data(
+    context, merged_hourly: pd.DataFrame
+) -> pd.DataFrame:
     """Transform the operation data.
 
     Add new time based features to the operation data, and
@@ -41,23 +43,15 @@ def transform_operation_data(merged_hourly: pd.DataFrame) -> pd.DataFrame:
         )
         op_data = pd.get_dummies(op_data, columns=["time_of_day"], dtype=int)
         op_data["date"] = pd.to_datetime(op_data["date"])
-        return MaterializeResult(
-            value=op_data,
-            metadata={
-                "num_rows": MetadataValue.int(len(op_data)),
-                "num_columns": MetadataValue.int(len(op_data.columns)),
-                "cols_dtypes": MetadataValue.json(
-                    {col: str(dtype) for col, dtype in op_data.dtypes.items()}
-                ),
-                "data.head()": MetadataValue.md(op_data.head().to_markdown()),
-            },
-        )
+        context.add_output_metadata(metadata=metadata_extractor(op_data))
+        return op_data
     except Exception as e:
         raise RuntimeError(f"Error in transforming operation data: {e}")
 
 
 @dg.asset(deps=["holiday_enriched_data"], group_name="final_data")
 def final_transformed_data(
+    context,
     csv_io: CSVIO,
     project_config: ProjectConfig,
     holiday_enriched_data: pd.DataFrame,
@@ -82,21 +76,7 @@ def final_transformed_data(
             final_data,
             project_config.raw_path_template.format("final_transformed_data"),
         )
-        return MaterializeResult(
-            value=None,
-            metadata={
-                "num_rows": MetadataValue.int(len(final_data)),
-                "num_columns": MetadataValue.int(len(final_data.columns)),
-                "cols_dtypes": MetadataValue.json(
-                    {
-                        col: str(dtype)
-                        for col, dtype in final_data.dtypes.items()
-                    }
-                ),
-                "data.head()": MetadataValue.md(
-                    final_data.head().to_markdown()
-                ),
-            },
-        )
+        context.add_output_metadata(metadata=metadata_extractor(final_data))
+        return None
     except Exception as e:
         raise RuntimeError(f"Error in transforming final data: {e}")

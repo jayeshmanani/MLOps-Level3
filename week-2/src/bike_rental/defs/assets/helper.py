@@ -1,6 +1,7 @@
 """Helper functions for bike rental data processing."""
 
 import pandas as pd
+from dagster import MetadataValue
 
 
 def data_to_hourly(data: pd.DataFrame, datetime_col: str) -> pd.DataFrame:
@@ -31,3 +32,19 @@ def data_merger(
         return merged_data
     except Exception as e:
         raise Exception(f"error occurred while merging data: {e}")
+
+
+def metadata_extractor(data: pd.DataFrame) -> dict:
+    """Extract metadata from the given data and return a dictionary."""
+    try:
+        metadata = {
+            "num_rows": MetadataValue.int(len(data)),
+            "num_columns": MetadataValue.int(len(data.columns)),
+            "cols_dtypes": MetadataValue.json(
+                {col: str(dtype) for col, dtype in data.dtypes.items()}
+            ),
+            "data.head()": MetadataValue.md(data.head().to_markdown()),
+        }
+        return metadata
+    except Exception as e:
+        raise Exception(f"error occurred while extracting metadata: {e}")

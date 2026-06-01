@@ -2,11 +2,8 @@
 
 import dagster as dg
 import pandas as pd
-from dagster import MaterializeResult, MetadataValue
 
-from bike_rental.defs.assets.helper import (
-    data_merger,
-)
+from bike_rental.defs.assets.helper import data_merger, metadata_extractor
 
 
 @dg.asset(
@@ -14,7 +11,9 @@ from bike_rental.defs.assets.helper import (
     group_name="operation_data",
 )
 def merged_hourly(
-    bike_rental_hourly: pd.DataFrame, direct_pick_up_hourly: pd.DataFrame
+    context,
+    bike_rental_hourly: pd.DataFrame,
+    direct_pick_up_hourly: pd.DataFrame,
 ) -> pd.DataFrame:
     """Merge bike rental hourly data and direct pick up hourly data.
 
@@ -30,22 +29,8 @@ def merged_hourly(
             suffixe_str=("_rentals", "_pickups"),
         )
         merged_hourly = merged_data.fillna(0)
-        return MaterializeResult(
-            value=merged_hourly,
-            metadata={
-                "num_rows": MetadataValue.int(len(merged_hourly)),
-                "num_columns": MetadataValue.int(len(merged_hourly.columns)),
-                "cols_dtypes": MetadataValue.json(
-                    {
-                        col: str(dtype)
-                        for col, dtype in merged_hourly.dtypes.items()
-                    }
-                ),
-                "data.head()": MetadataValue.md(
-                    merged_hourly.head().to_markdown()
-                ),
-            },
-        )
+        context.add_output_metadata(metadata=metadata_extractor(merged_hourly))
+        return merged_hourly
     except Exception as e:
         raise Exception(f"error occurred while merging hourly data: {e}")
 
@@ -55,7 +40,9 @@ def merged_hourly(
     group_name="weather_data_addition",
 )
 def weather_enriched_data(
-    transform_operation_data: pd.DataFrame, clean_weather_data: pd.DataFrame
+    context,
+    transform_operation_data: pd.DataFrame,
+    clean_weather_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """Merge the transformed operation data with weather data.
 
@@ -70,22 +57,8 @@ def weather_enriched_data(
             how_to="left",
             suffixe_str=("", "_weather"),
         )
-        return MaterializeResult(
-            value=merged_data,
-            metadata={
-                "num_rows": MetadataValue.int(len(merged_data)),
-                "num_columns": MetadataValue.int(len(merged_data.columns)),
-                "cols_dtypes": MetadataValue.json(
-                    {
-                        col: str(dtype)
-                        for col, dtype in merged_data.dtypes.items()
-                    }
-                ),
-                "data.head()": MetadataValue.md(
-                    merged_data.head().to_markdown()
-                ),
-            },
-        )
+        context.add_output_metadata(metadata=metadata_extractor(merged_data))
+        return merged_data
     except Exception as e:
         raise Exception(f"error occurred while merging weather data: {e}")
 
@@ -95,7 +68,9 @@ def weather_enriched_data(
     group_name="holiday_data_addition",
 )
 def holiday_enriched_data(
-    weather_enriched_data: pd.DataFrame, clean_holiday_data: pd.DataFrame
+    context,
+    weather_enriched_data: pd.DataFrame,
+    clean_holiday_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """Merge the merged hourly with weather data and holiday data.
 
@@ -110,21 +85,7 @@ def holiday_enriched_data(
             how_to="left",
             suffixe_str=(),
         )
-        return MaterializeResult(
-            value=merged_data,
-            metadata={
-                "num_rows": MetadataValue.int(len(merged_data)),
-                "num_columns": MetadataValue.int(len(merged_data.columns)),
-                "cols_dtypes": MetadataValue.json(
-                    {
-                        col: str(dtype)
-                        for col, dtype in merged_data.dtypes.items()
-                    }
-                ),
-                "data.head()": MetadataValue.md(
-                    merged_data.head().to_markdown()
-                ),
-            },
-        )
+        context.add_output_metadata(metadata=metadata_extractor(merged_data))
+        return merged_data
     except Exception as e:
         raise Exception(f"error occurred while merging holiday data: {e}")
