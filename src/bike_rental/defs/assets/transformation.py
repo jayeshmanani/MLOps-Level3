@@ -3,33 +3,12 @@
 import dagster as dg
 import pandas as pd
 
-from bike_rental.defs.assets.helper import metadata_extractor
+from bike_rental.defs.assets.helper import (
+    add_time_based_features,
+    metadata_extractor,
+)
 from bike_rental.defs.resources.csv_io import CSVIO
 from bike_rental.defs.resources.project_config import ProjectConfig
-
-
-def _add_time_based_features(op_data: pd.DataFrame) -> pd.DataFrame:
-    """Add time-based features to the operational rental data."""
-    try:
-        op_data = op_data.copy()
-
-        op_data["weekday"] = op_data["datetime"].dt.weekday
-        op_data["year"] = op_data["datetime"].dt.year
-        op_data["month"] = op_data["datetime"].dt.month
-        op_data["day"] = op_data["datetime"].dt.day
-        op_data["quarter"] = op_data["datetime"].dt.quarter
-        op_data["date"] = op_data["datetime"].dt.date
-        op_data["hour"] = op_data["datetime"].dt.hour
-        op_data["is_month_start"] = op_data[
-            "datetime"
-        ].dt.is_month_start.astype(int)
-        op_data["is_month_end"] = op_data["datetime"].dt.is_month_end.astype(
-            int
-        )
-        op_data["date"] = pd.to_datetime(op_data["date"])
-        return op_data
-    except Exception as e:
-        raise RuntimeError(f"Error in adding time-based features: {e}")
 
 
 @dg.asset(deps=["operational_rentals_hourly"], group_name="operational_data")
@@ -41,7 +20,9 @@ def operational_rental_features(
     This turns the hourly operational totals into a feature table.
     """
     try:
-        op_data = _add_time_based_features(operational_rentals_hourly)
+        op_data = add_time_based_features(
+            operational_rentals_hourly, "datetime"
+        )
         op_data["total_count"] = (
             op_data["count_rentals"] + op_data["count_pickups"]
         )
@@ -62,14 +43,6 @@ def curated_rental_dataset(
     try:
         data = rentals_with_holidays.copy()
         data["is_holiday"] = data["holiday"].notna().astype(int)
-        data["holiday_impact"] = data.groupby("holiday")[
-            "total_count"
-        ].transform("mean")
-        data["holiday_impact"] = data["holiday_impact"].fillna(0)
-        data["deviation_from_normal"] = (
-            data["total_count"] - data["holiday_impact"]
-        )
-        data["deviation_from_normal"] = data["deviation_from_normal"].fillna(0)
         data.drop(columns=["holiday"], inplace=True)
         data.drop(columns=["date"], inplace=True)
         csv_io.write(

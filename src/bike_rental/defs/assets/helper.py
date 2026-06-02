@@ -48,3 +48,24 @@ def metadata_extractor(data: pd.DataFrame) -> dict:
         return metadata
     except Exception as e:
         raise Exception(f"error occurred while extracting metadata: {e}")
+
+
+def add_time_based_features(op_data: pd.DataFrame, col: str) -> pd.DataFrame:
+    """Add time-based features to the operational rental data."""
+    try:
+        op_data = op_data.copy()
+        op_data[col] = pd.to_datetime(op_data[col], errors="coerce")
+        op_data["weekday"] = op_data[col].dt.weekday
+        op_data["year"] = op_data[col].dt.year
+        op_data["month"] = op_data[col].dt.month
+        op_data["day"] = op_data[col].dt.day
+        op_data["quarter"] = op_data[col].dt.quarter
+        op_data["date"] = op_data[col].dt.date
+        if col == "datetime":
+            op_data["hour"] = op_data[col].dt.hour
+        op_data["is_month_start"] = op_data[col].dt.is_month_start.astype(int)
+        op_data["is_month_end"] = op_data[col].dt.is_month_end.astype(int)
+        op_data["date"] = pd.to_datetime(op_data["date"], errors="coerce")
+        return op_data
+    except Exception as e:
+        raise RuntimeError(f"Error in adding time-based features: {e}")

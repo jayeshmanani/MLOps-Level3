@@ -20,13 +20,13 @@ class ProjectConfig(ConfigurableResource):
     curated_path: str = "data/raw/curated_rental_dataset.csv"
     raw_path_template: str = "data/raw/raw_{}.csv"
     FEATURES: ClassVar[list[str]] = [
-        "location_id",
-        "weekday",
-        "year",
-        "month",
-        "day",
-        "quarter",
-        "hour",
+        # "location_id",
+        # "weekday",
+        # "year",
+        # "month",
+        # "day",
+        # "quarter",
+        # "hour",
         "is_month_start",
         "is_month_end",
         "temperature_c",
@@ -38,7 +38,5 @@ class ProjectConfig(ConfigurableResource):
         "conditions_heavy_rain",
         "conditions_light_rain",
         "is_holiday",
-        "holiday_impact",
-        "deviation_from_normal",
     ]
     TARGET: ClassVar[str] = "total_count"
