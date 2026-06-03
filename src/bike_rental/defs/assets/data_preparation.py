@@ -4,6 +4,8 @@ import dagster as dg
 import pandas as pd
 
 from bike_rental.defs.assets.helper import (
+    add_lag_features,
+    add_rolling_features,
     add_time_based_features,
     metadata_extractor,
 )
@@ -98,6 +100,18 @@ def train_test_split(
 
     # Trying with Removing Location and Daily Prediction
     data = aggregate_hourly(data)
+
+    # Adding lag and rolling features after aggregation to avoid data leakage
+    data = add_time_based_features(data, col="datetime")
+
+    # Adding lag and rolling features after aggregation to avoid data leakage
+    data = add_lag_features(data, target_col="total_count", lags=[1, 24, 168])
+    data = add_rolling_features(
+        data, target_col="total_count", windows=[24, 168]
+    )
+
+    data = data.sort_values("datetime").reset_index(drop=True)
+    data = data.dropna().reset_index(drop=True)
 
     # Time ordered split: 70% train, 30% test
     split_index = int(len(data) * 0.7)

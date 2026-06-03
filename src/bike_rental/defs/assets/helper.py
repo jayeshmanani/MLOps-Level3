@@ -1,5 +1,6 @@
 """Helper functions for bike rental data processing."""
 
+import numpy as np
 import pandas as pd
 from dagster import MetadataValue
 
@@ -53,19 +54,58 @@ def metadata_extractor(data: pd.DataFrame) -> dict:
 def add_time_based_features(op_data: pd.DataFrame, col: str) -> pd.DataFrame:
     """Add time-based features to the operational rental data."""
     try:
-        op_data = op_data.copy()
-        op_data[col] = pd.to_datetime(op_data[col], errors="coerce")
-        op_data["weekday"] = op_data[col].dt.weekday
-        op_data["year"] = op_data[col].dt.year
-        op_data["month"] = op_data[col].dt.month
-        op_data["day"] = op_data[col].dt.day
-        op_data["quarter"] = op_data[col].dt.quarter
-        op_data["date"] = op_data[col].dt.date
+        df = op_data.copy()
+        df[col] = pd.to_datetime(df[col], errors="coerce")
+        df["dayofweek"] = df[col].dt.dayofweek
+        df["year"] = df[col].dt.year
+        df["month"] = df[col].dt.month
+        df["day"] = df[col].dt.day
+        df["quarter"] = df[col].dt.quarter
+        df["date"] = df[col].dt.date
         if col == "datetime":
-            op_data["hour"] = op_data[col].dt.hour
-        op_data["is_month_start"] = op_data[col].dt.is_month_start.astype(int)
-        op_data["is_month_end"] = op_data[col].dt.is_month_end.astype(int)
-        op_data["date"] = pd.to_datetime(op_data["date"], errors="coerce")
-        return op_data
+            df["hour"] = df[col].dt.hour
+        df["is_month_start"] = df[col].dt.is_month_start.astype(int)
+        df["is_month_end"] = df[col].dt.is_month_end.astype(int)
+        df["is_weekend"] = df["dayofweek"].isin([5, 6]).astype(int)
+        df["date"] = pd.to_datetime(df["date"], errors="coerce")
+
+        # New features for cyclic encoding of hour
+        if "hour" in df.columns:
+            df["hour_sin"] = np.sin(2 * np.pi * df["hour"] / 24)
+            df["hour_cos"] = np.cos(2 * np.pi * df["hour"] / 24)
+        return df
     except Exception as e:
         raise RuntimeError(f"Error in adding time-based features: {e}")
+
+
+def add_lag_features(
+    df: pd.DataFrame, target_col: str, lags: list
+) -> pd.DataFrame:
+    """Add lag features to the given DataFrame."""
+    try:
+        df = df.sort_values("datetime")
+        for lag in lags:
+            df[f"{target_col}_lag_{lag}"] = df[target_col].shift(lag)
+        return df
+    except Exception as e:
+        raise RuntimeError(f"Error in adding lag features: {e}")
+
+
+def add_rolling_features(
+    df: pd.DataFrame, target_col: str, windows: list
+) -> pd.DataFrame:
+    """Add rolling features to the given DataFrame."""
+    try:
+        df = df.sort_values("datetime")
+        for window in windows:
+            df[f"{target_col}_rolling_mean_{window}"] = (
+                df[target_col].shift(1).rolling(window=window).mean()
+            )
+
+            df[f"{target_col}_rolling_std_{window}"] = (
+                df[target_col].shift(1).rolling(window=window).std()
+            )
+
+        return df
+    except Exception as e:
+        raise RuntimeError(f"Error in adding rolling features: {e}")

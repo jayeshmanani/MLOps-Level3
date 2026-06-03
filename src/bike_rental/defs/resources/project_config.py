@@ -21,14 +21,28 @@ class ProjectConfig(ConfigurableResource):
     raw_path_template: str = "data/raw/raw_{}.csv"
     FEATURES: ClassVar[list[str]] = [
         # "location_id",
-        # "weekday",
-        # "year",
-        # "month",
-        # "day",
-        # "quarter",
-        # "hour",
+        # Time-based features
+        "dayofweek",
+        "year",
+        "month",
+        "day",
+        "quarter",
+        "hour",
         "is_month_start",
         "is_month_end",
+        "is_weekend",
+        "hour_sin",
+        "hour_cos",
+        "total_count_lag_1",
+        "total_count_lag_24",
+        "total_count_lag_168",
+        "total_count_rolling_mean_24",
+        "total_count_rolling_std_24",
+        "total_count_rolling_mean_168",
+        "total_count_rolling_std_168",
+        # Holiday feature
+        "is_holiday",
+        # Weather features
         "temperature_c",
         "perceived_temperature_c",
         "humidity",
@@ -37,6 +51,5 @@ class ProjectConfig(ConfigurableResource):
         "conditions_clouds",
         "conditions_heavy_rain",
         "conditions_light_rain",
-        "is_holiday",
     ]
     TARGET: ClassVar[str] = "total_count"
