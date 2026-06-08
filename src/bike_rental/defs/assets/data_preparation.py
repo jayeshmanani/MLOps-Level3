@@ -14,7 +14,19 @@ from bike_rental.defs.resources.project_config import ProjectConfig
 
 
 def _data_clean_helper(data: pd.DataFrame) -> pd.DataFrame:
-    """Clean helper function to clean the curated rental dataset."""
+    """Clean the curated rental dataset.
+
+    Parameters
+    ----------
+    data
+        Input dataframe to clean.
+
+    Returns
+    -------
+    pd.DataFrame
+        Cleaned dataframe.
+
+    """
     try:
         data = data.copy()
         data["datetime"] = pd.to_datetime(data["datetime"])
@@ -29,7 +41,9 @@ def _data_clean_helper(data: pd.DataFrame) -> pd.DataFrame:
 
 @dg.asset(deps=["curated_rental_dataset"], group_name="data_preparation")
 def clean_curated_data(
-    context, csv_io: CSVIO, project_config: ProjectConfig
+    context: dg.AssetExecutionContext,
+    csv_io: CSVIO,
+    project_config: ProjectConfig,
 ) -> pd.DataFrame:
     """Clean the curated rental dataset before splitting.
 
@@ -57,9 +71,18 @@ def clean_curated_data(
 
 
 def _aggregate_hourly(df: pd.DataFrame) -> pd.DataFrame:
-    """Aggregate hourly data to daily level by summing.
+    """Aggregate hourly data to daily level.
 
-    counts and averaging features.
+    Parameters
+    ----------
+    df
+        Hourly-level rental dataframe.
+
+    Returns
+    -------
+    pd.DataFrame
+        Hourly-level dataframe with summed counts and averaged features.
+
     """
     df = df.drop(columns=["location_id", "hour"], errors="ignore").copy()
     daily_df = df.groupby("datetime", as_index=False).agg(
@@ -81,7 +104,19 @@ def _aggregate_hourly(df: pd.DataFrame) -> pd.DataFrame:
 
 
 def _add_modified_weather_features(df: pd.DataFrame) -> pd.DataFrame:
-    """Add modified weather features based on existing ones."""
+    """Add lagged weather features based on existing columns.
+
+    Parameters
+    ----------
+    df
+        Input dataframe.
+
+    Returns
+    -------
+    pd.DataFrame
+        Dataframe with added weather lag features.
+
+    """
     df = df.copy()
     weather_cols = [
         "temperature_c",
@@ -100,18 +135,31 @@ def _add_modified_weather_features(df: pd.DataFrame) -> pd.DataFrame:
 
 @dg.multi_asset(
     outs={
-        "X_train": dg.AssetOut(),
-        "X_test": dg.AssetOut(),
-        "y_train": dg.AssetOut(),
-        "y_test": dg.AssetOut(),
+        "train_df": dg.AssetOut(),
+        "test_df": dg.AssetOut(),
     },
     deps=["clean_curated_data"],
     group_name="data_preparation",
 )
 def train_test_split(
-    context, clean_curated_data: pd.DataFrame, project_config: ProjectConfig
-) -> tuple[pd.DataFrame, pd.DataFrame, pd.Series, pd.Series]:
-    """Split the cleaned curated dataset into training and testing sets."""
+    context: dg.AssetExecutionContext,
+    clean_curated_data: pd.DataFrame,
+) -> tuple[pd.DataFrame, pd.DataFrame]:
+    """Split the cleaned curated dataset into train and test sets.
+
+    Parameters
+    ----------
+    context
+        Dagster asset execution context.
+    clean_curated_data
+        Cleaned dataset to split.
+
+    Returns
+    -------
+    tuple[pd.DataFrame, pd.DataFrame]
+        Training and testing dataframes.
+
+    """
     data = clean_curated_data.copy()
     data["datetime"] = pd.to_datetime(data["datetime"])
     data = data.sort_values("datetime").reset_index(drop=True)
@@ -136,24 +184,14 @@ def train_test_split(
     # Time ordered split: 70% train, 30% test
     split_index = int(len(data) * 0.7)
 
-    train = data.iloc[:split_index]
-    test = data.iloc[split_index:]
-
-    X_train = train[project_config.FEATURES]
-    y_train = train[project_config.TARGET]
-
-    X_test = test[project_config.FEATURES]
-    y_test = test[project_config.TARGET]
+    train_df = data.iloc[:split_index]
+    test_df = data.iloc[split_index:]
 
     context.add_output_metadata(
-        output_name="X_train",
-        metadata=metadata_extractor(X_train)
-        | {"y_train": y_train.head().to_dict()},
+        output_name="train_df", metadata=metadata_extractor(train_df)
     )
     context.add_output_metadata(
-        output_name="X_test",
-        metadata=metadata_extractor(X_test)
-        | {"y_test": y_test.head().to_dict()},
+        output_name="test_df", metadata=metadata_extractor(test_df)
     )
 
-    return X_train, X_test, y_train, y_test
+    return train_df, test_df

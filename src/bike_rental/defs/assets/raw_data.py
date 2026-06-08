@@ -10,7 +10,9 @@ from bike_rental.defs.resources.project_config import ProjectConfig
 
 @dg.asset(group_name="source_data")
 def raw_booked_rental_data(
-    context, csv_io: CSVIO, project_config: ProjectConfig
+    context: dg.AssetExecutionContext,
+    csv_io: CSVIO,
+    project_config: ProjectConfig,
 ) -> pd.DataFrame:
     """Load the booked rental source data.
 
@@ -26,7 +28,9 @@ def raw_booked_rental_data(
 
 @dg.asset(group_name="source_data")
 def raw_direct_pickup_data(
-    context, csv_io: CSVIO, project_config: ProjectConfig
+    context: dg.AssetExecutionContext,
+    csv_io: CSVIO,
+    project_config: ProjectConfig,
 ) -> pd.DataFrame:
     """Load the direct pickup source data.
 
@@ -42,7 +46,9 @@ def raw_direct_pickup_data(
 
 @dg.asset(group_name="source_data")
 def raw_weather_data(
-    context, csv_io: CSVIO, project_config: ProjectConfig
+    context: dg.AssetExecutionContext,
+    csv_io: CSVIO,
+    project_config: ProjectConfig,
 ) -> pd.DataFrame:
     """Load the weather source data.
 
@@ -58,7 +64,9 @@ def raw_weather_data(
 
 @dg.asset(group_name="source_data")
 def raw_holiday_data(
-    context, csv_io: CSVIO, project_config: ProjectConfig
+    context: dg.AssetExecutionContext,
+    csv_io: CSVIO,
+    project_config: ProjectConfig,
 ) -> pd.DataFrame:
     """Load the holiday source data.
 

@@ -11,7 +11,7 @@ from bike_rental.defs.assets.helper import data_merger, metadata_extractor
     group_name="operational_data",
 )
 def operational_rentals_hourly(
-    context,
+    context: dg.AssetExecutionContext,
     booked_rental_hourly: pd.DataFrame,
     direct_pickup_hourly: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -41,7 +41,7 @@ def operational_rentals_hourly(
     group_name="context_data",
 )
 def rentals_with_weather(
-    context,
+    context: dg.AssetExecutionContext,
     operational_rental_features: pd.DataFrame,
     weather_context_data: pd.DataFrame,
 ) -> pd.DataFrame:
@@ -68,7 +68,7 @@ def rentals_with_weather(
     group_name="context_data",
 )
 def rentals_with_holidays(
-    context,
+    context: dg.AssetExecutionContext,
     rentals_with_weather: pd.DataFrame,
     holiday_context_data: pd.DataFrame,
 ) -> pd.DataFrame:

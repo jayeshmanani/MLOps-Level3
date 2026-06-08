@@ -12,8 +12,22 @@ from bike_rental.defs.resources.project_config import ProjectConfig
 DEFAULT_HOLDOUT_DAYS = 180
 
 
-def _loc_metrics(df, pred_col):
-    """Calculate MAE and RMSE for location-level predictions."""
+def _loc_metrics(df: pd.DataFrame, pred_col: str) -> tuple[float, float]:
+    """Calculate MAE and RMSE for a prediction column.
+
+    Parameters
+    ----------
+    df
+        Input dataframe containing the target column and prediction column.
+    pred_col
+        Name of the prediction column to evaluate.
+
+    Returns
+    -------
+    tuple[float, float]
+        Mean absolute error and root mean squared error.
+
+    """
     df = df.dropna(subset=[pred_col])
 
     y_true = df["total_count"].values
@@ -26,7 +40,10 @@ def _loc_metrics(df, pred_col):
 
 
 @dg.asset(group_name="baseline_model", deps=["rental_without_loc"])
-def base_model_no_loc(context, rental_without_loc) -> None:
+def base_model_no_loc(
+    context: dg.AssetExecutionContext,
+    rental_without_loc: pd.DataFrame,
+) -> None:
     """Generate baseline predictions without location information."""
     data = rental_without_loc.copy()
     data["date"] = pd.to_datetime(data["date"])
@@ -62,7 +79,10 @@ def base_model_no_loc(context, rental_without_loc) -> None:
 
 
 @dg.asset(group_name="baseline_model", deps=["rental_with_loc"])
-def base_model_with_loc(context, rental_with_loc) -> None:
+def base_model_with_loc(
+    context: dg.AssetExecutionContext,
+    rental_with_loc: pd.DataFrame,
+) -> None:
     """Generate baseline predictions with location information."""
     data = rental_with_loc.copy()
     data["date"] = pd.to_datetime(data["date"])
@@ -98,7 +118,19 @@ def base_model_with_loc(context, rental_with_loc) -> None:
 
 
 def _help_prepare_hourly_data(data: pd.DataFrame) -> pd.DataFrame:
-    """Help function to prepare hourly data for baseline modeling."""
+    """Prepare hourly data for baseline modeling.
+
+    Parameters
+    ----------
+    data
+        Raw rental dataframe.
+
+    Returns
+    -------
+    pd.DataFrame
+        Aggregated hourly dataframe with baseline prediction columns.
+
+    """
     try:
         data["datetime"] = pd.to_datetime(data["datetime"])
         hourly_daily = (
@@ -127,7 +159,9 @@ def _help_prepare_hourly_data(data: pd.DataFrame) -> pd.DataFrame:
 
 @dg.asset(group_name="baseline_model", deps=["rental_with_loc"])
 def base_model_hourly_no_loc(
-    context, csv_io: CSVIO, project_config: ProjectConfig
+    context: dg.AssetExecutionContext,
+    csv_io: CSVIO,
+    project_config: ProjectConfig,
 ) -> None:
     """Generate baseline predictions hourly without location information."""
     data = csv_io.read(project_config.curated_path)

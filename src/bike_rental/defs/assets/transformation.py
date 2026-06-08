@@ -13,7 +13,8 @@ from bike_rental.defs.resources.project_config import ProjectConfig
 
 @dg.asset(deps=["operational_rentals_hourly"], group_name="operational_data")
 def operational_rental_features(
-    context, operational_rentals_hourly: pd.DataFrame
+    context: dg.AssetExecutionContext,
+    operational_rentals_hourly: pd.DataFrame,
 ) -> pd.DataFrame:
     """Add time-based features to the operational rental data.
 
@@ -34,7 +35,7 @@ def operational_rental_features(
 
 @dg.asset(deps=["rentals_with_holidays"], group_name="final_dataset")
 def curated_rental_dataset(
-    context,
+    context: dg.AssetExecutionContext,
     csv_io: CSVIO,
     project_config: ProjectConfig,
     rentals_with_holidays: pd.DataFrame,

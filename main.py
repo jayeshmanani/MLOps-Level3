@@ -4,8 +4,15 @@ It serves as the entry point for the application.
 """
 
 
-def main():
-    """Print a greeting for the mlops-level3 project."""
+def main() -> None:
+    """Print a greeting for the mlops-level3 project.
+
+    Returns
+    -------
+    None
+        This function is used as a simple script entry point.
+
+    """
     print("Hello from mlops-level3!")
 
 

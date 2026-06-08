@@ -27,7 +27,16 @@ class CSVIO(ConfigurableResource):
             raise Exception(f"error occurred while reading CSV file: {e}")
 
     def write(self, df: pd.DataFrame, rel_path: str) -> None:
-        """Write a DataFrame to a CSV file at the specified path."""
+        """Write a DataFrame to a CSV file at the specified path.
+
+        Parameters
+        ----------
+        df
+            Dataframe to persist.
+        rel_path
+            Path relative to the configured base directory.
+
+        """
         try:
             path = Path(self.base_path) / rel_path
             path.parent.mkdir(parents=True, exist_ok=True)

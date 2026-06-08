@@ -61,7 +61,9 @@ def _data_without_location_for_baseline(data: pd.DataFrame) -> pd.DataFrame:
     deps=["curated_rental_dataset"],
 )
 def clean_data_for_baseline(
-    context, csv_io: CSVIO, project_config: ProjectConfig
+    context: dg.AssetExecutionContext,
+    csv_io: CSVIO,
+    project_config: ProjectConfig,
 ) -> tuple[pd.DataFrame, pd.DataFrame]:
     """Clean the curated rental dataset before for baseline modeling.
 

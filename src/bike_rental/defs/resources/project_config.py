@@ -77,3 +77,21 @@ class ProjectConfig(ConfigurableResource):
         # "conditions_clear_lag_168",
     ]
     TARGET: ClassVar[str] = "total_count"
+
+    params: dict = {
+        "random_forest": {
+            "n_estimators": 200,
+            "max_depth": None,
+            "random_state": 42,
+            "n_jobs": -1,
+        },
+        "xgboost": {
+            "n_estimators": 300,
+            "learning_rate": 0.05,
+            "max_depth": 6,
+            "subsample": 0.8,
+            "colsample_bytree": 0.8,
+            "random_state": 42,
+        },
+        "linear_regression": {},
+    }

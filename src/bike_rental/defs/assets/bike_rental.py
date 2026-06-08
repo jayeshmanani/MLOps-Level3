@@ -8,7 +8,8 @@ from bike_rental.defs.assets.helper import data_to_hourly, metadata_extractor
 
 @dg.asset(group_name="operational_data")
 def booked_rental_hourly(
-    context, raw_booked_rental_data: pd.DataFrame
+    context: dg.AssetExecutionContext,
+    raw_booked_rental_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """Aggregate booked rentals into hourly counts.
 
@@ -26,7 +27,8 @@ def booked_rental_hourly(
 
 @dg.asset(group_name="operational_data")
 def direct_pickup_hourly(
-    context, raw_direct_pickup_data: pd.DataFrame
+    context: dg.AssetExecutionContext,
+    raw_direct_pickup_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """Aggregate direct pickups into hourly counts.
 
@@ -44,7 +46,7 @@ def direct_pickup_hourly(
 
 @dg.asset(group_name="context_data")
 def weather_context_data(
-    context,
+    context: dg.AssetExecutionContext,
     raw_weather_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """Prepare the weather context data.
@@ -70,7 +72,8 @@ def weather_context_data(
 
 @dg.asset(group_name="context_data")
 def holiday_context_data(
-    context, raw_holiday_data: pd.DataFrame
+    context: dg.AssetExecutionContext,
+    raw_holiday_data: pd.DataFrame,
 ) -> pd.DataFrame:
     """Prepare the holiday context data.
 
