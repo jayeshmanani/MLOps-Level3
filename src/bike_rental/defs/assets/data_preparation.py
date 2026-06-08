@@ -56,7 +56,7 @@ def clean_curated_data(
     return data
 
 
-def aggregate_hourly(df: pd.DataFrame) -> pd.DataFrame:
+def _aggregate_hourly(df: pd.DataFrame) -> pd.DataFrame:
     """Aggregate hourly data to daily level by summing.
 
     counts and averaging features.
@@ -80,6 +80,24 @@ def aggregate_hourly(df: pd.DataFrame) -> pd.DataFrame:
     return daily_df
 
 
+def _add_modified_weather_features(df: pd.DataFrame) -> pd.DataFrame:
+    """Add modified weather features based on existing ones."""
+    df = df.copy()
+    weather_cols = [
+        "temperature_c",
+        "perceived_temperature_c",
+        "humidity",
+        "windspeed_kmh",
+        # "conditions_clear",
+        # "conditions_clouds",
+        # "conditions_heavy_rain",
+        # "conditions_light_rain",
+    ]
+    for col in weather_cols:
+        df = add_lag_features(df, target_col=col, lags=[24])
+    return df
+
+
 @dg.multi_asset(
     outs={
         "X_train": dg.AssetOut(),
@@ -99,17 +117,19 @@ def train_test_split(
     data = data.sort_values("datetime").reset_index(drop=True)
 
     # Trying with Removing Location and Daily Prediction
-    data = aggregate_hourly(data)
+    data = _aggregate_hourly(data)
 
     # Adding lag and rolling features after aggregation to avoid data leakage
     data = add_time_based_features(data, col="datetime")
 
     # Adding lag and rolling features after aggregation to avoid data leakage
-    data = add_lag_features(data, target_col="total_count", lags=[1, 24, 168])
+    data = add_lag_features(data, target_col="total_count", lags=[24, 168])
+
     data = add_rolling_features(
         data, target_col="total_count", windows=[24, 168]
     )
 
+    # data = _add_modified_weather_features(data)
     data = data.sort_values("datetime").reset_index(drop=True)
     data = data.dropna().reset_index(drop=True)
 
