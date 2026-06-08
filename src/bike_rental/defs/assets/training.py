@@ -24,6 +24,22 @@ class TrainingConfig(dg.Config):
     params: dict[str, object] = {}
 
 
+def _mlflow_log_helper(
+    model_type: ModelType,
+    model,
+    metrics: dict[str, float],
+    parameters: dict[str, object],
+) -> None:
+    """Log to MLFlow - model parameters, metrics, and model artifact."""
+    with mlflow.start_run(run_name=f"train_{model_type.value}"):
+        mlflow.log_params(parameters)
+        mlflow.log_metrics(metrics)
+        if model_type == ModelType.XGBOOST and hasattr(mlflow, "xgboost"):
+            mlflow.xgboost.log_model(model, f"{model_type.value}_model")
+        else:
+            mlflow.sklearn.log_model(model, f"{model_type.value}_model")
+
+
 @dg.asset(group_name="model_training_evaluation")
 def train_and_score_all_models(
     context: dg.AssetExecutionContext,
@@ -47,35 +63,15 @@ def train_and_score_all_models(
     results: dict[str, dict[str, float]] = {}
 
     for model_type in ModelType:
-        model_name = model_type
         parameters = project_config.params.get(model_type.value, {})
-        model = ModelFactory.create(model_name=model_name, params=parameters)
+        model = ModelFactory.create(model_name=model_type, params=parameters)
+
         trainer = Trainer(model)
-
         trainer.fit(X_train, y_train)
-
         metrics = trainer.evaluate(X_test, y_test)
 
-        # Log to MLflow
-        with mlflow.start_run(run_name=f"train_{model_type.value}"):
-            mlflow.log_params(parameters)
-            mlflow.log_metrics(metrics)
-            try:
-                if model_type == ModelType.XGBOOST and hasattr(
-                    mlflow, "xgboost"
-                ):
-                    mlflow.xgboost.log_model(model, artifact_path="model")
-                else:
-                    mlflow.sklearn.log_model(model, artifact_path="model")
-            except Exception as e:
-                context.log.warn(
-                    f"Failed to log model to MLflow for {model_type}: {e}"
-                )
-
-        # Keep a record in the logs for each model
-        context.log.info(f"Trained {model_type.value} -> metrics={metrics}")
+        _mlflow_log_helper(model_type, model, metrics, parameters)
 
         results[model_type.value] = metrics
-
-    context.add_output_metadata({"models": results})
+    context.add_output_metadata({"Evaluation Metrics": results})
     return results
