@@ -3,7 +3,7 @@
 import dagster as dg
 import numpy as np
 import pandas as pd
-from sklearn.metrics import mean_absolute_error, mean_squared_error
+from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 from bike_rental.defs.assets.helper import metadata_extractor
 from bike_rental.defs.resources.csv_io import CSVIO
@@ -35,8 +35,9 @@ def _loc_metrics(df: pd.DataFrame, pred_col: str) -> tuple[float, float]:
 
     mae = mean_absolute_error(y_true, y_pred)
     rmse = np.sqrt(mean_squared_error(y_true, y_pred))
+    r2 = r2_score(y_true, y_pred)
 
-    return mae, rmse
+    return mae, rmse, r2
 
 
 @dg.asset(group_name="baseline_model", deps=["rental_without_loc"])
@@ -51,20 +52,25 @@ def base_model_no_loc(
     holdout_start = data["date"].max() - pd.Timedelta(days=holdout_days)
     test_daily = data[data["date"] >= holdout_start].copy()
 
-    mae_naive, rmse_naive = _loc_metrics(test_daily, pred_col="naive_pred")
+    mae_naive, rmse_naive, r2_naive = _loc_metrics(
+        test_daily, pred_col="naive_pred"
+    )
 
     # Evaluate seasonal (lag-7) on holdout
-    mae_seasonal, rmse_seasonal = _loc_metrics(
+    mae_seasonal, rmse_seasonal, r2_seasonal = _loc_metrics(
         test_daily, pred_col="seasonal_pred_7"
     )
     # Evaluate 7-day average on holdout
-    mae_7day, rmse_7day = _loc_metrics(test_daily, pred_col="pred_7day_avg")
+    mae_7day, rmse_7day, r2_7day = _loc_metrics(
+        test_daily, pred_col="pred_7day_avg"
+    )
 
     eval_df = pd.DataFrame(
         {
             "model": ["naive", "seasonal_lag_7", "7day_avg"],
             "mae": [mae_naive, mae_seasonal, mae_7day],
             "rmse": [rmse_naive, rmse_seasonal, rmse_7day],
+            "r2": [r2_naive, r2_seasonal, r2_7day],
         }
     )
     context.add_output_metadata(
@@ -90,20 +96,25 @@ def base_model_with_loc(
     holdout_start = data["date"].max() - pd.Timedelta(days=holdout_days)
     test_daily = data[data["date"] >= holdout_start].copy()
 
-    mae_naive, rmse_naive = _loc_metrics(test_daily, pred_col="naive_pred")
+    mae_naive, rmse_naive, r2_naive = _loc_metrics(
+        test_daily, pred_col="naive_pred"
+    )
 
     # Evaluate seasonal (lag-7) on holdout
-    mae_seasonal, rmse_seasonal = _loc_metrics(
+    mae_seasonal, rmse_seasonal, r2_seasonal = _loc_metrics(
         test_daily, pred_col="seasonal_pred_7"
     )
     # Evaluate 7-day average on holdout
-    mae_7day, rmse_7day = _loc_metrics(test_daily, pred_col="pred_7day_avg")
+    mae_7day, rmse_7day, r2_7day = _loc_metrics(
+        test_daily, pred_col="pred_7day_avg"
+    )
 
     eval_df = pd.DataFrame(
         {
             "model": ["naive", "seasonal_lag_7", "7day_avg"],
             "mae": [mae_naive, mae_seasonal, mae_7day],
             "rmse": [rmse_naive, rmse_seasonal, rmse_7day],
+            "r2": [r2_naive, r2_seasonal, r2_7day],
         }
     )
     context.add_output_metadata(
@@ -170,16 +181,21 @@ def base_model_hourly_no_loc(
     holdout_days = DEFAULT_HOLDOUT_DAYS
     holdout_start = data["date"].max() - pd.Timedelta(days=holdout_days)
     hour_test = data[data["date"] >= holdout_start].copy()
-    mae_naive, rmse_naive = _loc_metrics(hour_test, pred_col="naive_pred")
-    mae_seasonal, rmse_seasonal = _loc_metrics(
+    mae_naive, rmse_naive, r2_naive = _loc_metrics(
+        hour_test, pred_col="naive_pred"
+    )
+    mae_seasonal, rmse_seasonal, r2_seasonal = _loc_metrics(
         hour_test, pred_col="seasonal_pred_24hr"
     )
-    mae_7day, rmse_7day = _loc_metrics(hour_test, pred_col="pred_24hour_avg")
+    mae_7day, rmse_7day, r2_7day = _loc_metrics(
+        hour_test, pred_col="pred_24hour_avg"
+    )
     eval_df = pd.DataFrame(
         {
             "model": ["naive", "seasonal_lag_7", "7day_avg"],
             "mae": [mae_naive, mae_seasonal, mae_7day],
             "rmse": [rmse_naive, rmse_seasonal, rmse_7day],
+            "r2": [r2_naive, r2_seasonal, r2_7day],
         }
     )
     context.add_output_metadata(

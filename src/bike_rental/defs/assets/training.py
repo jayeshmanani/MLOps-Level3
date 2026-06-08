@@ -70,8 +70,10 @@ def train_and_score_all_models(
         trainer.fit(X_train, y_train)
         metrics = trainer.evaluate(X_test, y_test)
 
+        parameters.update({"model_name": str(model_type.value)})
         _mlflow_log_helper(model_type, model, metrics, parameters)
 
         results[model_type.value] = metrics
+
     context.add_output_metadata({"Evaluation Metrics": results})
     return results
