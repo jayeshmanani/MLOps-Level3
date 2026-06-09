@@ -47,7 +47,6 @@ mlflow.sqlite
 *.pt
 *.pth
 
-models/
 model_outputs/
 saved_models/
 

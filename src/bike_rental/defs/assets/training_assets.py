@@ -8,9 +8,10 @@ import mlflow
 import mlflow.sklearn
 import pandas as pd
 
-from bike_rental.defs.assets.mlflow.utils import init_mlflow
-from bike_rental.defs.assets.model.factory import ModelFactory, ModelType
-from bike_rental.defs.assets.model.trainer import Trainer
+from models.factory import ModelFactory, ModelType
+from models.trainer import Trainer
+from models.mlflow_utils import init_mlflow
+
 from bike_rental.defs.resources.project_config import ProjectConfig
 
 load_dotenv.load_dotenv()
