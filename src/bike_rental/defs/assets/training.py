@@ -1,6 +1,5 @@
 """Asset definitions for training and evaluating models."""
 
-import os
 from typing import Any
 
 import dagster as dg
@@ -8,37 +7,19 @@ import load_dotenv
 import mlflow
 import mlflow.sklearn
 import pandas as pd
-from mlflow import MlflowClient
 
+from bike_rental.defs.assets.mlflow.utils import init_mlflow
 from bike_rental.defs.assets.model.factory import ModelFactory, ModelType
 from bike_rental.defs.assets.model.trainer import Trainer
 from bike_rental.defs.resources.project_config import ProjectConfig
 
 load_dotenv.load_dotenv()
+mlflow_config = init_mlflow()
 
 try:
     import mlflow.xgboost
 except Exception:
     mlflow_xgboost = None
-
-MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI", "http://localhost:5000")
-MODEL_NAME = os.getenv("MODEL_NAME", "rental_forecast_model")
-CANDIDATE_ALIAS = os.getenv("CANDIDATE_ALIAS", "candidate")
-CHAMPION_ALIAS = os.getenv("CHAMPION_ALIAS", "champion")
-
-EXPERIMENT_NAME = os.getenv(
-    "EXPERIMENT_NAME", "MLflow Integration with Dagster"
-)
-
-client = MlflowClient(MLFLOW_TRACKING_URI)
-
-mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
-
-try:
-    mlflow.set_experiment(EXPERIMENT_NAME)
-except Exception:
-    mlflow.create_experiment(EXPERIMENT_NAME)
-    mlflow.set_experiment(EXPERIMENT_NAME)
 
 
 def _log_model(
@@ -111,117 +92,3 @@ def train_and_score_all_models(
 
     context.add_output_metadata(best)
     return best
-
-
-@dg.asset(
-    group_name="model_registry",
-    ins={"best_model": dg.AssetIn("train_and_score_all_models")},
-)
-def register_candidate_model(
-    context: dg.AssetExecutionContext, best_model: dict[str, Any]
-) -> dict[str, Any]:
-    """Register best model as candidate in MLflow."""
-    model_uri = f"runs:/{best_model['run_id']}/{best_model['artifact_path']}"
-
-    registered = mlflow.register_model(
-        model_uri=model_uri,
-        name=MODEL_NAME,
-    )
-
-    client.set_registered_model_alias(
-        name=MODEL_NAME,
-        version=registered.version,
-        alias=CANDIDATE_ALIAS,
-    )
-
-    result = {
-        "run_id": best_model["run_id"],
-        "model_type": best_model["model_type"],
-        "r2": best_model["r2"],
-        "model_version": registered.version,
-        "model_uri": model_uri,
-    }
-    context.add_output_metadata(result)
-    return result
-
-
-def _get_champion() -> tuple[str, float] | None:
-    """Return champion model version and r2 metric."""
-    try:
-        champ = client.get_model_version_by_alias(
-            name=MODEL_NAME,
-            alias=CHAMPION_ALIAS,
-        )
-        run = client.get_run(champ.run_id)
-        r2 = float(run.data.metrics.get("r2", float("-inf")))
-        return champ.version, r2
-    except Exception:
-        return None
-
-
-def _is_first_champion(
-    champion: tuple[str, float] | None,
-    candidate: dict[str, Any],
-    candidate_r2: float,
-) -> dict[str, Any]:
-    """If no champion exists, promote candidate to champion."""
-    if champion is None:
-        client.set_registered_model_alias(
-            name=MODEL_NAME,
-            version=candidate["model_version"],
-            alias=CHAMPION_ALIAS,
-        )
-        return {
-            "promoted": True,
-            "reason": "first champion",
-            "champion_version": candidate["model_version"],
-            "champion_r2": candidate_r2,
-        }
-    return {}
-
-
-def _can_promote_to_champion(
-    candidate: dict[str, Any], champion: tuple[str, float], candidate_r2: float
-) -> dict[str, Any]:
-    """Determine if candidate can be promoted to champion."""
-    champion_version, champion_r2 = champion
-    if candidate_r2 > champion_r2:
-        client.set_registered_model_alias(
-            name=MODEL_NAME,
-            version=candidate["model_version"],
-            alias=CHAMPION_ALIAS,
-        )
-
-        return {
-            "promoted": True,
-            "reason": f"beaten {champion_version}",
-            "champion_version": candidate["model_version"],
-            "champion_r2": candidate_r2,
-        }
-    return {
-        "promoted": False,
-        "reason": f"kept {champion_version}",
-        "champion_version": champion_version,
-        "champion_r2": champion_r2,
-        "candidate_r2": candidate_r2,
-    }
-
-
-@dg.asset(
-    group_name="model_registry",
-    ins={"candidate": dg.AssetIn("register_candidate_model")},
-)
-def promote_champion_model(
-    context: dg.AssetExecutionContext, candidate: dict[str, Any]
-) -> dict[str, Any]:
-    """Promotes model if better than current champion."""
-    candidate_r2 = float(candidate["r2"])
-
-    champion = _get_champion()
-    ret = _is_first_champion(champion, candidate, candidate_r2)
-    if ret:
-        context.add_output_metadata(ret)
-        return ret
-    ret = _can_promote_to_champion(candidate, champion, candidate_r2)
-    context.add_output_metadata(ret)
-    return ret
