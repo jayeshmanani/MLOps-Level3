@@ -295,6 +295,7 @@ dependencies = [
     { name = "scikit-learn", version = "1.8.0", source = { registry = "https://pypi.org/simple" }, marker = "python_full_version >= '3.11'" },
     { name = "seaborn" },
     { name = "statsmodels" },
+    { name = "uvicorn" },
     { name = "xgboost" },
 ]
 
@@ -317,6 +318,7 @@ requires-dist = [
     { name = "scikit-learn", specifier = ">=1.7.2" },
     { name = "seaborn", specifier = ">=0.13.2" },
     { name = "statsmodels", specifier = ">=0.14.6" },
+    { name = "uvicorn", specifier = ">=0.42.0" },
     { name = "xgboost", specifier = ">=3.2.0" },
 ]
 

@@ -19,6 +19,8 @@ env/
 # Dagster local runs
 # =========================
 .dagster/
+.nux/
+.telemetry/
 dagster_storage/
 storage/
 *.db

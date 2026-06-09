@@ -6,7 +6,8 @@ from .mlflow_utils import init_mlflow
 
 mlflow_config = init_mlflow()
 
-def _get_champion() -> tuple[str, float] | None:
+
+def get_champion() -> tuple[str, float] | None:
     """Return champion model version and r2 metric."""
     try:
         champ = mlflow_config["client"].get_model_version_by_alias(
@@ -47,7 +48,7 @@ def evaluate_and_update_champion(candidate: dict[str, Any]) -> dict[str, Any]:
     model_name = mlflow_config["MODEL_NAME"]
     champion_alias = mlflow_config["CHAMPION_ALIAS"]
     candidate_r2 = float(candidate["r2"])
-    champion = _get_champion()
+    champion = get_champion()
     ret = is_first_champion(champion, candidate, candidate_r2)
     if ret:
         return ret
@@ -73,3 +74,13 @@ def evaluate_and_update_champion(candidate: dict[str, Any]) -> dict[str, Any]:
         "champion_r2": champion_r2,
         "candidate_r2": candidate_r2,
     }
+
+
+def load_champion_model():
+    """Load champion model from MLflow."""
+    champion = get_champion()
+    if champion is None:
+        raise ValueError("No champion model found.")
+    version, _ = champion
+    model_uri = f"models:/{mlflow_config['MODEL_NAME']}/{version}"
+    return mlflow_config["mlflow"].pyfunc.load_model(model_uri)

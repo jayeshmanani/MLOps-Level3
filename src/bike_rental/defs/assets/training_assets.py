@@ -8,11 +8,10 @@ import mlflow
 import mlflow.sklearn
 import pandas as pd
 
-from models.factory import ModelFactory, ModelType
-from models.trainer import Trainer
-from models.mlflow_utils import init_mlflow
-
 from bike_rental.defs.resources.project_config import ProjectConfig
+from models.factory import ModelFactory, ModelType
+from models.mlflow_utils import init_mlflow
+from models.trainer import Trainer
 
 load_dotenv.load_dotenv()
 mlflow_config = init_mlflow()
