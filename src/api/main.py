@@ -13,12 +13,11 @@ def read_champion_metadata():
     champion_data = get_champion()
     if champion_data is None:
         return {"error": "No model has been promoted to champion yet."}
-
-    version, r2_score = champion_data
     return {
         "status": "active",
-        "champion_version": version,
-        "r2_score": r2_score,
+        "champion_version": champion_data["version"],
+        "metrics": champion_data["metrics"],
+        "model_type": champion_data["model_type"],
     }
 
 
