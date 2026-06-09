@@ -1,19 +1,29 @@
 """Asset definitions for training and evaluating models."""
 
+import os
+
 import dagster as dg
+import load_dotenv
 import mlflow
 import mlflow.sklearn
 import pandas as pd
+from mlflow import MlflowClient
 
 from bike_rental.defs.assets.model.factory import ModelFactory, ModelType
 from bike_rental.defs.assets.model.trainer import Trainer
 from bike_rental.defs.resources.project_config import ProjectConfig
+
+load_dotenv.load_dotenv()
 
 try:
     import mlflow.xgboost
 except Exception:
     mlflow_xgboost = None
 
+MLFLOW_TRACKING_URI = os.getenv("MLFLOW_TRACKING_URI")
+client = MlflowClient(MLFLOW_TRACKING_URI)
+
+mlflow.set_tracking_uri(MLFLOW_TRACKING_URI)
 experiment_name = "MLflow Integration with Dagster"
 
 try:
@@ -29,6 +39,54 @@ class TrainingConfig(dg.Config):
 
     model_name: ModelType
     params: dict[str, object] = {}
+
+
+def _helper_mlflow_log_model(
+    model_type: ModelType,
+    model: any,
+    parameters: dict[str, object],
+    metrics: dict[str, float],
+) -> None:
+    try:
+        artifact_path = parameters.get(
+            "model_name", f"{model_type.value}_model"
+        )
+        mlflow.log_params(parameters)
+        mlflow.log_metrics(metrics)
+        if model_type == ModelType.XGBOOST and hasattr(mlflow, "xgboost"):
+            mlflow.xgboost.log_model(model, artifact_path)
+        else:
+            mlflow.sklearn.log_model(model, artifact_path)
+    except Exception as e:
+        print(f"Error logging model to MLflow: {e}")
+
+
+def _helper_register_best_model() -> dict[str, object]:
+    try:
+        last_3_runs = client.search_runs(
+            experiment_ids=[
+                client.get_experiment_by_name(experiment_name).experiment_id
+            ],
+            max_results=3,
+            order_by=["metrics.r2 DESC"],
+        )
+        best_run = last_3_runs[0]
+        best_run_id = best_run.info.run_id
+        best_model_path = best_run.data.params.get("model_name")
+        model_uri = f"runs:/{best_run_id}/{best_model_path}"
+        registered_model = mlflow.register_model(
+            model_uri=model_uri, name="rental_forecast_model"
+        )
+        return {
+            "best_model_run_id": best_run_id,
+            "best_model_metrics": best_run.data.metrics,
+            "registered_model_version": registered_model.version,
+            "model_uri": model_uri,
+            "model_name": registered_model.name,
+        }
+    except Exception as e:
+        print(f"Error registering best model to MLflow: {e}")
+    return {}
 
 
 @dg.asset(group_name="model_training_evaluation")
@@ -52,48 +110,25 @@ def train_and_score_all_models(
     y_test = test_df[project_config.TARGET]
 
     results: dict[str, dict[str, float]] = {}
-    best_run_id = None
-    best_model_path = None
-    best_r2 = float("-inf")
-
     for model_type in ModelType:
         parameters = project_config.params.get(model_type.value, {})
         model = ModelFactory.create(model_name=model_type, params=parameters)
         trainer = Trainer(model)
-        artifact_path = f"{model_type.value}_model"
-        with mlflow.start_run(run_name=f"train_{model_type.value}") as run:
+        with mlflow.start_run(run_name=f"train_{model_type.value}"):
+            parameters.update({"model_name": f"{model.__class__.__name__}"})
+
             trainer.fit(X_train, y_train)
             metrics = trainer.evaluate(X_test, y_test)
 
-            parameters.update({"model_name": str(model_type.value)})
-
-            mlflow.log_params(parameters)
-            mlflow.log_metrics(metrics)
-            if model_type == ModelType.XGBOOST and hasattr(mlflow, "xgboost"):
-                mlflow.xgboost.log_model(model, artifact_path)
-            else:
-                mlflow.sklearn.log_model(model, artifact_path)
-
-            if metrics.get("r2", float("-inf")) > best_r2:
-                best_r2 = metrics["r2"]
-                best_run_id = run.info.run_id
-                best_model_path = artifact_path
+            _helper_mlflow_log_model(model_type, model, parameters, metrics)
 
         results[model_type.value] = metrics
+    registered_model_info = _helper_register_best_model()
 
-    model_uri = f"runs:/{best_run_id}/{best_model_path}"
-
-    registered_model = mlflow.register_model(
-        model_uri=model_uri, name="rental_forecast_model"
-    )
     context.add_output_metadata(
         {
             "Evaluation Metrics": results,
-            "best_model_run_id": best_run_id,
-            "best_model_r2": best_r2,
-            "registered_model_version": registered_model.version,
-            "model_uri": model_uri,
-            "model_name": registered_model.name,
+            **registered_model_info,
         }
     )
     return results
