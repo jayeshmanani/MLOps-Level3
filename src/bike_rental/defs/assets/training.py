@@ -145,7 +145,8 @@ def register_candidate_model(
     return result
 
 
-def _get_champion():
+def _get_champion() -> tuple[str, float] | None:
+    """Return champion model version and r2 metric."""
     try:
         champ = client.get_model_version_by_alias(
             name=MODEL_NAME,
@@ -156,6 +157,54 @@ def _get_champion():
         return champ.version, r2
     except Exception:
         return None
+
+
+def _is_first_champion(
+    champion: tuple[str, float] | None,
+    candidate: dict[str, Any],
+    candidate_r2: float,
+) -> dict[str, Any]:
+    """If no champion exists, promote candidate to champion."""
+    if champion is None:
+        client.set_registered_model_alias(
+            name=MODEL_NAME,
+            version=candidate["model_version"],
+            alias=CHAMPION_ALIAS,
+        )
+        return {
+            "promoted": True,
+            "reason": "first champion",
+            "champion_version": candidate["model_version"],
+            "champion_r2": candidate_r2,
+        }
+    return {}
+
+
+def _can_promote_to_champion(
+    candidate: dict[str, Any], champion: tuple[str, float], candidate_r2: float
+) -> dict[str, Any]:
+    """Determine if candidate can be promoted to champion."""
+    champion_version, champion_r2 = champion
+    if candidate_r2 > champion_r2:
+        client.set_registered_model_alias(
+            name=MODEL_NAME,
+            version=candidate["model_version"],
+            alias=CHAMPION_ALIAS,
+        )
+
+        return {
+            "promoted": True,
+            "reason": f"beaten {champion_version}",
+            "champion_version": candidate["model_version"],
+            "champion_r2": candidate_r2,
+        }
+    return {
+        "promoted": False,
+        "reason": f"kept {champion_version}",
+        "champion_version": champion_version,
+        "champion_r2": champion_r2,
+        "candidate_r2": candidate_r2,
+    }
 
 
 @dg.asset(
@@ -169,45 +218,10 @@ def promote_champion_model(
     candidate_r2 = float(candidate["r2"])
 
     champion = _get_champion()
-
-    if champion is None:
-        client.set_registered_model_alias(
-            name=MODEL_NAME,
-            version=candidate["model_version"],
-            alias=CHAMPION_ALIAS,
-        )
-        ret = {
-            "promoted": True,
-            "reason": "first champion",
-            "champion_version": candidate["model_version"],
-            "champion_r2": candidate_r2,
-        }
+    ret = _is_first_champion(champion, candidate, candidate_r2)
+    if ret:
         context.add_output_metadata(ret)
         return ret
-
-    champion_version, champion_r2 = champion
-
-    if candidate_r2 > champion_r2:
-        client.set_registered_model_alias(
-            name=MODEL_NAME,
-            version=candidate["model_version"],
-            alias=CHAMPION_ALIAS,
-        )
-
-        ret = {
-            "promoted": True,
-            "reason": f"beaten {champion_version}",
-            "champion_version": candidate["model_version"],
-            "champion_r2": candidate_r2,
-        }
-        context.add_output_metadata(ret)
-        return ret
-    ret = {
-        "promoted": False,
-        "reason": f"kept {champion_version}",
-        "champion_version": champion_version,
-        "champion_r2": champion_r2,
-        "candidate_r2": candidate_r2,
-    }
+    ret = _can_promote_to_champion(candidate, champion, candidate_r2)
     context.add_output_metadata(ret)
     return ret
