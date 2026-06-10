@@ -1,8 +1,10 @@
 """Project configuration resource for file paths and environment settings."""
 
-from typing import ClassVar
+from typing import Any, ClassVar
 
+import pandas as pd
 from dagster import ConfigurableResource
+from pydantic import BaseModel, create_model
 
 
 class ProjectConfig(ConfigurableResource):
@@ -23,7 +25,7 @@ class ProjectConfig(ConfigurableResource):
         # "location_id",
         # Time-based features
         "dayofweek",
-        "year",
+        # "year",
         "month",
         "day",
         "quarter",
@@ -95,3 +97,27 @@ class ProjectConfig(ConfigurableResource):
         },
         "linear_regression": {},
     }
+
+    _FeatureModel: ClassVar[type[BaseModel] | None] = None
+
+    @classmethod
+    def get_feature_model(cls) -> type[BaseModel]:
+        """Return Pydantic model based on FEATURES list."""
+        if cls._FeatureModel is None:
+            field_definitions: dict[str, tuple] = {
+                feature: (float, ...) for feature in cls.FEATURES
+            }
+
+            cls._FeatureModel = create_model(
+                "FeatureInput", __base__=BaseModel, **field_definitions
+            )
+        return cls._FeatureModel
+
+    @classmethod
+    def features_to_dataframe(
+        cls, data: dict[str, Any] | BaseModel
+    ) -> pd.DataFrame:
+        """Convert dict or FeatureInput to DataFrame."""
+        if isinstance(data, BaseModel):
+            data = data.model_dump()
+        return pd.DataFrame([data])

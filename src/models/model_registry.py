@@ -2,6 +2,8 @@
 
 from typing import Any
 
+import mlflow
+
 from .mlflow_utils import init_mlflow
 
 mlflow_config = init_mlflow()
@@ -89,4 +91,4 @@ def load_champion_model():
         raise ValueError("No champion model found.")
     version, _ = champion["version"], champion["r2"]
     model_uri = f"models:/{mlflow_config['MODEL_NAME']}/{version}"
-    return mlflow_config["mlflow"].pyfunc.load_model(model_uri)
+    return mlflow.pyfunc.load_model(model_uri)

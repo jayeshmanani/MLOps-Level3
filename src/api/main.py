@@ -1,10 +1,13 @@
 """Main API for the bike rental project."""
 
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
-from models.model_registry import get_champion
+from bike_rental.defs.resources.project_config import ProjectConfig
+from models.model_registry import get_champion, load_champion_model
 
-app = FastAPI()
+FeatureInput = ProjectConfig.get_feature_model()
+
+app = FastAPI(title="Bike Rental Prediction API")
 
 
 @app.get("/current-champion")
@@ -30,12 +33,15 @@ def index():
     }
 
 
-# @app.post("/predict")
-# def predict():
-#     """Prediction endpoint."""
-#     try:
-#         model = load_champion_model()
-#         model.predict()
-#         return {"message": "Prediction endpoint not yet implemented."}
-#     except ValueError as e:
-#         return {"error": str(e)}
+@app.post("/predict")
+def predict(features: dict):
+    """Bike Rental Prediction endpoint."""
+    try:
+        model = load_champion_model()
+        features = FeatureInput(**features)
+        df = ProjectConfig.features_to_dataframe(features)
+        prediction = model.predict(df)
+
+        return {"prediction": float(prediction[0]), "status": "success"}
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
