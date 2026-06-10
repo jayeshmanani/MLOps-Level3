@@ -18,6 +18,15 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "aenum"
+version = "3.1.17"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/07/e9/8b283567c1fef7c24d1f390b37daede8b61593d8cdaffb8e95d571699e83/aenum-3.1.17.tar.gz", hash = "sha256:a969a4516b194895de72c875ece355f17c0d272146f7fda346ef74f93cf4d5ba", size = 137648, upload-time = "2026-03-20T20:43:29.846Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/48/8d/1fe30c6fd8999b9d462547c4a1bb6690bda24af38f2913c4bec7decb81f2/aenum-3.1.17-py3-none-any.whl", hash = "sha256:8b883a37a04e74cc838ac442bdd28c266eae5bbf13e1342c7ef123ed25230139", size = 165560, upload-time = "2026-03-20T20:43:27.681Z" },
+]
+
+[[package]]
 name = "aiohappyeyeballs"
 version = "2.6.2"
 source = { registry = "https://pypi.org/simple" }
@@ -283,7 +292,9 @@ version = "0.1.0"
 source = { editable = "." }
 dependencies = [
     { name = "dagster" },
+    { name = "dotenv-cli" },
     { name = "ipykernel" },
+    { name = "lakefs-spec" },
     { name = "load-dotenv" },
     { name = "matplotlib" },
     { name = "mlflow" },
@@ -309,7 +320,9 @@ dev = [
 [package.metadata]
 requires-dist = [
     { name = "dagster", specifier = "==1.12.21" },
+    { name = "dotenv-cli", specifier = ">=3.4.1" },
     { name = "ipykernel", specifier = ">=7.2.0" },
+    { name = "lakefs-spec", specifier = ">=0.14.0" },
     { name = "load-dotenv", specifier = ">=0.1.0" },
     { name = "matplotlib", specifier = ">=3.10.9" },
     { name = "mlflow", specifier = ">=3.13.0" },
@@ -1079,6 +1092,15 @@ source = { registry = "https://pypi.org/simple" }
 sdist = { url = "https://files.pythonhosted.org/packages/b2/9d/c3b43da9515bd270df0f80548d9944e389870713cc1fe2b8fb35fe2bcefd/docstring_parser-0.17.0.tar.gz", hash = "sha256:583de4a309722b3315439bb31d64ba3eebada841f2e2cee23b99df001434c912", size = 27442, upload-time = "2025-07-21T07:35:01.868Z" }
 wheels = [
     { url = "https://files.pythonhosted.org/packages/55/e2/2537ebcff11c1ee1ff17d8d0b6f4db75873e3b0fb32c2d4a2ee31ecb310a/docstring_parser-0.17.0-py3-none-any.whl", hash = "sha256:cf2569abd23dce8099b300f9b4fa8191e9582dda731fd533daf54c4551658708", size = 36896, upload-time = "2025-07-21T07:35:00.684Z" },
+]
+
+[[package]]
+name = "dotenv-cli"
+version = "3.4.1"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/7d/0c/24d1332d85ec949a77c2e9422b682724026004df8d919a202073ebdc0276/dotenv_cli-3.4.1.tar.gz", hash = "sha256:8357511e041eda48b6a9f310d416cbfcee4aaeef7f66b2cb817031ac15de3c2d", size = 9390, upload-time = "2024-09-06T17:58:21.802Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/2c/bb/90dc3d9babb1ec8effebd379bce95966b3f9830306efd4578189e2e3a520/dotenv_cli-3.4.1-py3-none-any.whl", hash = "sha256:69f8ee14788d9cf611de022746a6486a87ccc672e95b73eb333e887e904e0053", size = 7113, upload-time = "2024-09-06T17:58:20.632Z" },
 ]
 
 [[package]]
@@ -2007,6 +2029,48 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/48/44/2b5b95b7aa39fb2d8d9d956e0f3d5d45aef2ae1d942d4c3ffac2f9cfed1a/kiwisolver-1.5.0-pp311-pypy311_pp73-manylinux2014_x86_64.manylinux_2_17_x86_64.whl", hash = "sha256:be4a51a55833dc29ab5d7503e7bcb3b3af3402d266018137127450005cdfe737", size = 79892, upload-time = "2026-03-09T13:15:49.694Z" },
     { url = "https://files.pythonhosted.org/packages/52/7d/7157f9bba6b455cfb4632ed411e199fc8b8977642c2b12082e1bd9e6d173/kiwisolver-1.5.0-pp311-pypy311_pp73-manylinux_2_24_aarch64.manylinux_2_28_aarch64.whl", hash = "sha256:daae526907e262de627d8f70058a0f64acc9e2641c164c99c8f594b34a799a16", size = 77603, upload-time = "2026-03-09T13:15:50.945Z" },
     { url = "https://files.pythonhosted.org/packages/0a/dd/8050c947d435c8d4bc94e3252f4d8bb8a76cfb424f043a8680be637a57f1/kiwisolver-1.5.0-pp311-pypy311_pp73-win_amd64.whl", hash = "sha256:59cd8683f575d96df5bb48f6add94afc055012c29e28124fcae2b63661b9efb1", size = 73558, upload-time = "2026-03-09T13:15:52.112Z" },
+]
+
+[[package]]
+name = "lakefs"
+version = "0.16.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "lakefs-sdk" },
+    { name = "pyyaml" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/b2/60/5cdf074905ac0bb1fe11570ad56e94f22df651d02b67ab267fbdf46bb561/lakefs-0.16.0.tar.gz", hash = "sha256:f17afa5f8d99a622e7d8088a57c74262ae058befc6a4eba7e4b6cc9704f84748", size = 34340, upload-time = "2026-04-10T16:37:22.478Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/31/af/15e3bb8b125795c008ff57fa2592130f5f25a0521726e44f3902f8903a60/lakefs-0.16.0-py3-none-any.whl", hash = "sha256:a513bc8b5a64d31b1ed75ce11aee803de84c1e9c11207a042acd874012799b0b", size = 39324, upload-time = "2026-04-10T16:37:21.451Z" },
+]
+
+[[package]]
+name = "lakefs-sdk"
+version = "1.81.1"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "aenum" },
+    { name = "pydantic" },
+    { name = "python-dateutil" },
+    { name = "urllib3" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/f2/71/f1f93b220da1f1ee7d752e16ae5867b061eed0691ddc0f894b1067d73dc9/lakefs_sdk-1.81.1.tar.gz", hash = "sha256:f63b167ce39a09fe5be2784b923877ac1c12445861d87eae5c2689536e711f07", size = 128412, upload-time = "2026-05-21T16:24:24.316Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/26/fb/271489ade0829a65d1c6b39ac9db3c087f9342eb67252d510df0ebd58a8e/lakefs_sdk-1.81.1-py3-none-any.whl", hash = "sha256:74a05708b6812e35600ee5f9baf731238fb356fdbdf571e69130a145691aaa31", size = 225288, upload-time = "2026-05-21T16:24:22.799Z" },
+]
+
+[[package]]
+name = "lakefs-spec"
+version = "0.14.0"
+source = { registry = "https://pypi.org/simple" }
+dependencies = [
+    { name = "fsspec" },
+    { name = "lakefs" },
+    { name = "typing-extensions" },
+]
+sdist = { url = "https://files.pythonhosted.org/packages/59/e2/32c7e193554f21fc6d0d08a07243823bb3a9d59c9cc9e383644b48779b29/lakefs_spec-0.14.0.tar.gz", hash = "sha256:6a9e92b78400149521d577d3ef8b6e3d1f2b61ba69b1b0cc67cbbf387819d094", size = 528899, upload-time = "2026-04-22T05:43:26.711Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/de/19/658b894aec189034700b1feb5c8d76e5c63d0dd73e16af1363fc3f4b51b1/lakefs_spec-0.14.0-py3-none-any.whl", hash = "sha256:ba5d872bf402bba0216a61ef4a27a4c3c944bacbb82ab565b7b220a2cc54a12f", size = 23831, upload-time = "2026-04-22T05:43:25.37Z" },
 ]
 
 [[package]]

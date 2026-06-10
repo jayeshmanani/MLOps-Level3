@@ -29,7 +29,7 @@ def index():
     """Root endpoint."""
     return {
         "message": "Welcome to the Bike Rental API!\
-          Visit /current-champion to see the current champion model metadata."
+          Visit /docs to Try out the different endpoints."
     }
 
 

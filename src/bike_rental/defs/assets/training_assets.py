@@ -27,6 +27,7 @@ def _log_model(
     model: Any,
     parameters: dict[str, object],
     metrics: dict[str, float],
+    feature_names: list[str]
 ) -> None:
     try:
         artifact_path = parameters.get(
@@ -35,6 +36,7 @@ def _log_model(
 
         mlflow.log_params(parameters)
         mlflow.log_metrics(metrics)
+        mlflow.log_param("feature_names", ",".join(feature_names))
 
         if model_type == ModelType.XGBOOST and hasattr(mlflow, "xgboost"):
             mlflow.xgboost.log_model(model, artifact_path)
@@ -78,7 +80,7 @@ def train_and_score_all_models(
             trainer.fit(X_train, y_train)
             metrics = trainer.evaluate(X_test, y_test)
 
-            _log_model(model_type, model, params, metrics)
+            _log_model(model_type, model, params, metrics, X_train.columns)
 
             r2 = float(metrics.get("r2", float("-inf")))
 

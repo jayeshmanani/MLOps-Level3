@@ -4,7 +4,9 @@ requires-python = ">=3.10,<3.15"
 version = "0.1.0"
 dependencies = [
     "dagster==1.12.21",
+    "dotenv-cli>=3.4.1",
     "ipykernel>=7.2.0",
+    "lakefs-spec>=0.14.0",
     "load-dotenv>=0.1.0",
     "matplotlib>=3.10.9",
     "mlflow>=3.13.0",

@@ -25,9 +25,9 @@ def run_dagster():
 
 
 def run_api():
-    """Start the FastAPI server on http://127.0.0.1:8000."""
+    """Start the FastAPI server on http://127.0.0.1:8001."""
     print("⚡ Starting FastAPI Endpoint...")
-    uvicorn.run("src.api.main:app", host="127.0.0.1", port=8000, reload=True)
+    uvicorn.run("src.api.main:app", host="127.0.0.1", port=8001, reload=True)
 
 
 if __name__ == "__main__":

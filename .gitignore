@@ -69,3 +69,15 @@ Thumbs.db
 # =========================
 .vscode/
 .idea/
+
+
+.lakectl.yaml
+data/bike-rental/*
+data/metadata/
+data/biker-rental/_lakefs/dummy
+config.yaml
+.lakectl copy.yaml
+lakefs-local/
+lakectl.yaml
+lakefs_start.txt
+1lakectl.yaml
