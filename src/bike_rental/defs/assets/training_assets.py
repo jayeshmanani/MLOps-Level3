@@ -27,7 +27,7 @@ def _log_model(
     model: Any,
     parameters: dict[str, object],
     metrics: dict[str, float],
-    feature_names: list[str]
+    feature_names: list[str],
 ) -> None:
     try:
         artifact_path = parameters.get(
