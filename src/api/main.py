@@ -2,26 +2,44 @@
 
 from contextlib import asynccontextmanager
 
+import pandas as pd
 from fastapi import FastAPI, HTTPException
+from pydantic import BaseModel, Field
 
+from bike_rental.defs.assets.helper import add_time_based_features
 from bike_rental.defs.resources.project_config import ProjectConfig
 from models.model_registry import get_champion, load_champion_model
-
-FeatureInput = ProjectConfig.get_feature_model()
 
 ml_models = {}
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    """Lifespan context manager to load champion model at startup."""
+    """Lifespan context manager to load the champion model at startup."""
     print("Loading champion model from MLflow...")
-    ml_models["champion"] = load_champion_model()
+    try:
+        ml_models["champion"] = load_champion_model()
+        print("Model loaded successfully.")
+    except Exception as e:
+        print(f"Warning: Could not load model at startup: {e}")
     yield
     ml_models.clear()
 
 
 app = FastAPI(title="Bike Rental Prediction API", lifespan=lifespan)
+
+
+class RentalPredictionRequest(BaseModel):
+    """Request model for bike rental prediction."""
+
+    datetime: str = Field(
+        ...,
+        description="ISO format datetime string",
+        examples=["2026-06-11T14:00:00"],
+    )
+    is_holiday: int = Field(
+        default=0, description="1 if it is a holiday, 0 otherwise", examples=[0]
+    )
 
 
 @app.get("/current-champion")
@@ -48,14 +66,21 @@ def index():
 
 
 @app.post("/predict")
-def predict(features: dict):
+def predict(request: RentalPredictionRequest):
     """Bike Rental Prediction endpoint."""
     try:
-        model = ml_models["champion"]
+        if "champion" not in ml_models:
+            raise RuntimeError(
+                "Model is not loaded. Ensure a champion model exists in MLflow."
+            )
 
-        features_obj = FeatureInput(**features)
-        df = ProjectConfig.features_to_dataframe(features_obj)
-        prediction = model.predict(df)
+        model = ml_models["champion"]
+        input_df = pd.DataFrame(
+            [{"datetime": request.datetime, "is_holiday": request.is_holiday}]
+        )
+        engineered_df = add_time_based_features(input_df, col="datetime")
+        features_to_pass = engineered_df[ProjectConfig.FEATURES]
+        prediction = model.predict(features_to_pass)
 
         return {"prediction": float(prediction[0]), "status": "success"}
     except Exception as e:

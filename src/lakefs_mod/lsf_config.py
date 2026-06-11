@@ -108,22 +108,29 @@ class LFSConfig:
         )
         return commit_ref
 
+    def get_uncommitted(self, branch: str):
+        """Return a list of uncommitted changes on a specific branch."""
+        return list(self.repo.branch(branch).uncommitted())
+
     def commit_if_changed(
         self,
         branch: str,
         message: str = "dagster update",
         metadata: dict = None,
     ):
-        """Evaluate diff and commits only if data has shifted."""
-        diff_list = self.diff(branch, "main")
+        """Evaluate uncommitted changes and commits only if data change."""
+        uncommitted_list = self.get_uncommitted(branch)
 
-        if not diff_list:
+        if not uncommitted_list:
             print(f"No changes detected on '{branch}', skipping commit.")
             return False
 
         commit_ref = self.commit(branch, message, metadata=metadata)
 
-        print(f"Committed {len(diff_list)} changes. Commit ID: {commit_ref.id}")
+        print(
+            f"Committed {len(uncommitted_list)} changes.\
+                  Commit ID: {commit_ref.id}"
+        )
         return commit_ref
 
     def get_asset_branch(self, asset_name: str, run_id: str):

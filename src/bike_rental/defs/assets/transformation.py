@@ -54,8 +54,8 @@ def curated_rental_dataset(
 
         data = rentals_with_holidays.copy()
         data["is_holiday"] = data["holiday"].notna().astype(int)
-        data.drop(columns=["holiday"], inplace=True)
-        data.drop(columns=["date"], inplace=True)
+        # data.drop(columns=["holiday"], inplace=True)
+        # data.drop(columns=["date"], inplace=True)
 
         lfs_conf.write_csv(data, project_config.curated_path, new_branch)
 
