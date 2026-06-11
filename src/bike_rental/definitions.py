@@ -3,8 +3,7 @@
 from dagster import Definitions, definitions, load_assets_from_package_module
 
 from bike_rental.defs import assets
-from bike_rental.defs.resources.csv_io import CSVIO
-from bike_rental.defs.resources.project_config import ProjectConfig
+from bike_rental.defs.resources import CSVIO, ProjectConfig
 
 asset_defs = load_assets_from_package_module(assets)
 

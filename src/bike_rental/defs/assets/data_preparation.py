@@ -9,8 +9,7 @@ from bike_rental.defs.assets.helper import (
     add_time_based_features,
     metadata_extractor,
 )
-from bike_rental.defs.resources.csv_io import CSVIO
-from bike_rental.defs.resources.project_config import ProjectConfig
+from bike_rental.defs.resources import CSVIO, ProjectConfig
 from lakefs_mod import lfs_conf
 
 

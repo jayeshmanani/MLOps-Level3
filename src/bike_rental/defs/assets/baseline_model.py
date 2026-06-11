@@ -6,8 +6,7 @@ import pandas as pd
 from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 
 from bike_rental.defs.assets.helper import metadata_extractor
-from bike_rental.defs.resources.csv_io import CSVIO
-from bike_rental.defs.resources.project_config import ProjectConfig
+from bike_rental.defs.resources import CSVIO, ProjectConfig
 from lakefs_mod import lfs_conf
 
 DEFAULT_HOLDOUT_DAYS = 180

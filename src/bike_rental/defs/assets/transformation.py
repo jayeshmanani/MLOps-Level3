@@ -7,8 +7,7 @@ from bike_rental.defs.assets.helper import (
     add_time_based_features,
     metadata_extractor,
 )
-from bike_rental.defs.resources.csv_io import CSVIO
-from bike_rental.defs.resources.project_config import ProjectConfig
+from bike_rental.defs.resources import CSVIO, ProjectConfig
 from lakefs_mod import lfs_conf
 from models import mlflow_manager
 
@@ -51,8 +50,8 @@ def curated_rental_dataset(
 
         data = rentals_with_holidays.copy()
         data["is_holiday"] = data["holiday"].notna().astype(int)
-        # data.drop(columns=["holiday"], inplace=True)
-        # data.drop(columns=["date"], inplace=True)
+        data.drop(columns=["holiday"], inplace=True)
+        data.drop(columns=["date"], inplace=True)
 
         lfs_conf.write_csv(data, project_config.curated_path, new_branch)
 
