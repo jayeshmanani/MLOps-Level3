@@ -9,10 +9,8 @@ from bike_rental.defs.assets.helper import (
 )
 from bike_rental.defs.resources.csv_io import CSVIO
 from bike_rental.defs.resources.project_config import ProjectConfig
-from lakefs_mod.lsf_config import LFSConfig
-from models.mlflow_utils import mlflow_manager
-
-lfs_conf = LFSConfig()
+from lakefs_mod import lfs_conf
+from models import mlflow_manager
 
 
 @dg.asset(deps=["operational_rentals_hourly"], group_name="operational_data")

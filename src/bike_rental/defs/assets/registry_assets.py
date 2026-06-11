@@ -4,10 +4,8 @@ from typing import Any
 
 import dagster as dg
 
-from lakefs_mod.lsf_config import LFSConfig
-from models.mlflow_utils import mlflow_manager
-
-lfs_conf = LFSConfig()
+from lakefs_mod import lfs_conf
+from models import mlflow_manager
 
 
 @dg.asset(

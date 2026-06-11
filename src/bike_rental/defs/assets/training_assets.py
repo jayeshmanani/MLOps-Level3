@@ -6,12 +6,8 @@ import dagster as dg
 import pandas as pd
 
 from bike_rental.defs.resources.project_config import ProjectConfig
-from lakefs_mod.lsf_config import LFSConfig
-from models.factory import ModelFactory, ModelType
-from models.mlflow_utils import mlflow_manager
-from models.trainer import Trainer
-
-lfs_conf = LFSConfig()
+from lakefs_mod import lfs_conf
+from models import ModelFactory, ModelType, Trainer, mlflow_manager
 
 
 @dg.asset(group_name="model_training_evaluation")

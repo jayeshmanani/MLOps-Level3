@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from bike_rental.defs.assets.helper import add_time_based_features
 from bike_rental.defs.resources.project_config import ProjectConfig
-from models.mlflow_utils import mlflow_manager
+from models import mlflow_manager
 
 ml_models = {}
 

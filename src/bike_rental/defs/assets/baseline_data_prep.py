@@ -6,9 +6,7 @@ import pandas as pd
 from bike_rental.defs.assets.helper import metadata_extractor
 from bike_rental.defs.resources.csv_io import CSVIO
 from bike_rental.defs.resources.project_config import ProjectConfig
-from lakefs_mod.lsf_config import LFSConfig
-
-lfs_conf = LFSConfig()
+from lakefs_mod import lfs_conf
 
 
 def _data_with_location_for_baseline(data: pd.DataFrame) -> pd.DataFrame:

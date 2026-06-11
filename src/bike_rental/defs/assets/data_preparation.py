@@ -11,9 +11,7 @@ from bike_rental.defs.assets.helper import (
 )
 from bike_rental.defs.resources.csv_io import CSVIO
 from bike_rental.defs.resources.project_config import ProjectConfig
-from lakefs_mod.lsf_config import LFSConfig
-
-lfs_conf = LFSConfig()
+from lakefs_mod import lfs_conf
 
 
 def _data_clean_helper(data: pd.DataFrame) -> pd.DataFrame:
