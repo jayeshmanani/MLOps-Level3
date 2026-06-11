@@ -3,14 +3,11 @@
 from typing import Any
 
 import dagster as dg
-import mlflow
 
 from lakefs_mod.lsf_config import LFSConfig
-from models.mlflow_utils import init_mlflow
-from models.model_registry import evaluate_and_update_champion
+from models.mlflow_utils import mlflow_manager
 
 lfs_conf = LFSConfig()
-mlflow_config = init_mlflow()
 
 
 @dg.asset(
@@ -21,25 +18,29 @@ def register_candidate_model(
     context: dg.AssetExecutionContext, best_model: dict[str, Any]
 ) -> dict[str, Any]:
     """Register best model as candidate in MLflow."""
-    model_uri = f"runs:/{best_model['run_id']}/{best_model['artifact_path']}"
-
-    registered = mlflow.register_model(
-        model_uri=model_uri,
-        name=mlflow_config["MODEL_NAME"],
+    description = (
+        f"### Bike Rental Demand Forecaster\n\n"
+        f"* **Model Type:** `{best_model['model_type']}`\n"
+        f"* **R² Score:** `{best_model['r2']:.4f}`\n"
+        f"* **Dagster Run ID:** `{str(context.run.run_id)}`\n\n"
+        f"**Lineage Tracking:**\n"
+        f"Trained automatically via Dagster pipeline.\
+            Check the MLflow Run tags to find the exact\
+            LakeFS data branch and commit ID used for this version."
     )
 
-    mlflow_config["client"].set_registered_model_alias(
-        name=mlflow_config["MODEL_NAME"],
-        version=registered.version,
-        alias=mlflow_config["CANDIDATE_ALIAS"],
+    registry_info = mlflow_manager.register_candidate(
+        run_id=best_model["run_id"],
+        artifact_path=best_model["artifact_path"],
+        description=description,
     )
 
     result = {
         "run_id": best_model["run_id"],
         "model_type": best_model["model_type"],
         "r2": best_model["r2"],
-        "model_version": registered.version,
-        "model_uri": model_uri,
+        "model_version": registry_info["model_version"],
+        "model_uri": registry_info["model_uri"],
     }
     context.add_output_metadata(result)
     return result
@@ -53,7 +54,7 @@ def promote_champion_model(
     context: dg.AssetExecutionContext, candidate: dict[str, Any]
 ) -> dict[str, Any]:
     """Promotes model if better than current champion."""
-    ret = evaluate_and_update_champion(candidate)
+    ret = mlflow_manager.evaluate_and_promote_champion(candidate)
     context.add_output_metadata(ret)
     return ret
 

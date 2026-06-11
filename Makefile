@@ -1,4 +1,20 @@
-.PHONY: mlflow dagster api all stop lakefs-create lakefs-start lakefs-stop lakefs-logs status clean
+# -----------------------
+# Start everything (dev mode)
+# -----------------------
+all:
+	@echo "🚀 Starting all services (recommended: separate terminals)..."
+	make mlflow & \
+	make dagster & \
+	make api & \
+	make lakefs-start
+
+
+stop-all:
+	@echo "🛑 Stopping all services..."
+	-@pkill -f "mlflow server" || true
+	-@pkill -f "dagster dev" || true
+	-@pkill -f "uvicorn src.api.main:app" || true
+	@make lakefs-stop
 
 
 clean:
@@ -77,21 +93,4 @@ status:
 lakefs-status:
 	@podman ps -a --filter name=lakefs
 
-
-# -----------------------
-# Start everything (dev mode)
-# -----------------------
-all:
-	@echo "🚀 Starting all services (recommended: separate terminals)..."
-	make mlflow & \
-	make dagster & \
-	make api & \
-	make lakefs-start
-
-
-stop-all:
-	@echo "🛑 Stopping all services..."
-	-@pkill -f "mlflow server" || true
-	-@pkill -f "dagster dev" || true
-	-@pkill -f "uvicorn src.api.main:app" || true
-	@make lakefs-stop
+.PHONY: mlflow dagster api all stop lakefs-create lakefs-start lakefs-stop lakefs-logs status clean

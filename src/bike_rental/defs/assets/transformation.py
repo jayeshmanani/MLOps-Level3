@@ -1,7 +1,6 @@
 """Assets for the final rental feature engineering stage."""
 
 import dagster as dg
-import mlflow
 import pandas as pd
 
 from bike_rental.defs.assets.helper import (
@@ -11,7 +10,7 @@ from bike_rental.defs.assets.helper import (
 from bike_rental.defs.resources.csv_io import CSVIO
 from bike_rental.defs.resources.project_config import ProjectConfig
 from lakefs_mod.lsf_config import LFSConfig
-from models.mlflow_utils import log_lakefs_metadata
+from models.mlflow_utils import mlflow_manager
 
 lfs_conf = LFSConfig()
 
@@ -59,7 +58,9 @@ def curated_rental_dataset(
 
         lfs_conf.write_csv(data, project_config.curated_path, new_branch)
 
-        with mlflow.start_run(run_name=asset_name) as active_run:
+        uncommitted_changes = lfs_conf.get_uncommitted(new_branch)
+
+        with mlflow_manager.start_run(run_name=asset_name) as active_run:
             commit_metadata = {
                 "dagster_run_id": str(context.run.run_id),
                 "mlflow_run_id": active_run.info.run_id,
@@ -70,25 +71,23 @@ def curated_rental_dataset(
                 message=f"Dagster update: {asset_name} pipeline",
                 metadata=commit_metadata,
             )
-            diff_list = lfs_conf.diff(new_branch, right="main")
-            diff_summary = (
-                f"{len(diff_list)} object(s) changed"
-                if diff_list
-                else "No changes"
-            )
             commit_id = commit_ref.id if commit_ref else None
-            log_lakefs_metadata(
+            mlflow_manager.log_lakefs_metadata(
                 asset_name=asset_name,
                 branch=new_branch,
                 commit_id=commit_id,
-                diff_summary=diff_summary,
+                diff_summary=uncommitted_changes,
             )
+        diff_summary = (
+            f"{len(uncommitted_changes)} object(s) changed"
+            if uncommitted_changes
+            else "No changes"
+        )
         dagster_metadata = metadata_extractor(data) | {
             "lakefs_branch": new_branch,
             "lakefs_commit_id": commit_id or "Skipped (No changes)",
             "diff_summary": diff_summary,
         }
-
         context.add_output_metadata(metadata=dagster_metadata)
 
         return None

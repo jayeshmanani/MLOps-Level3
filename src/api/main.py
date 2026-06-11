@@ -8,7 +8,7 @@ from pydantic import BaseModel, Field
 
 from bike_rental.defs.assets.helper import add_time_based_features
 from bike_rental.defs.resources.project_config import ProjectConfig
-from models.model_registry import get_champion, load_champion_model
+from models.mlflow_utils import mlflow_manager
 
 ml_models = {}
 
@@ -18,7 +18,7 @@ async def lifespan(app: FastAPI):
     """Lifespan context manager to load the champion model at startup."""
     print("Loading champion model from MLflow...")
     try:
-        ml_models["champion"] = load_champion_model()
+        ml_models["champion"] = mlflow_manager.load_champion_model()
         print("Model loaded successfully.")
     except Exception as e:
         print(f"Warning: Could not load model at startup: {e}")
@@ -45,7 +45,7 @@ class RentalPredictionRequest(BaseModel):
 @app.get("/current-champion")
 def read_champion_metadata():
     """Endpoint to get current champion model metadata."""
-    champion_data = get_champion()
+    champion_data = mlflow_manager.get_champion()
     if champion_data is None:
         return {"error": "No model has been promoted to champion yet."}
     return {
