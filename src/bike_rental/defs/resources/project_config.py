@@ -15,11 +15,18 @@ class ProjectConfig(ConfigurableResource):
     """
 
     base_path: str = "."
-    f_bike_rentals: str = "data/registered_bike_rentals.csv"
-    f_bike_rentals_direct_pickup: str = "data/direct_pickup_bike_rentals.csv"
-    f_holidays: str = "data/holidays.csv"
-    f_weather: str = "data/weather.csv"
-    curated_path: str = "data/raw/curated_rental_dataset.csv"
+    # f_bike_rentals: str = "data/registered_bike_rentals.csv"
+    # f_bike_rentals_direct_pickup: str = "data/direct_pickup_bike_rentals.csv"
+    # f_holidays: str = "data/holidays.csv"
+    # f_weather: str = "data/weather.csv"
+    # curated_path: str = "data/raw/curated_rental_dataset.csv"
+
+    f_bike_rentals: str = "registered_bike_rentals.csv"
+    f_bike_rentals_direct_pickup: str = "direct_pickup_bike_rentals.csv"
+    f_holidays: str = "holidays.csv"
+    f_weather: str = "weather.csv"
+    curated_path: str = "raw/curated_rental_dataset.csv"
+
     raw_path_template: str = "data/raw/raw_{}.csv"
     FEATURES: ClassVar[list[str]] = [
         # "location_id",

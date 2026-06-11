@@ -6,6 +6,9 @@ import pandas as pd
 from bike_rental.defs.assets.helper import metadata_extractor
 from bike_rental.defs.resources.csv_io import CSVIO
 from bike_rental.defs.resources.project_config import ProjectConfig
+from lakefs_mod.lsf_config import LFSConfig
+
+lfs_conf = LFSConfig()
 
 
 @dg.asset(group_name="source_data")
@@ -19,7 +22,8 @@ def raw_booked_rental_data(
     It reads the booked rental CSV file and returns the raw data.
     """
     try:
-        data = csv_io.read(project_config.f_bike_rentals)
+        # data = csv_io.read(project_config.f_bike_rentals, lfs_conf.config)
+        data = lfs_conf.read_csv(project_config.f_bike_rentals, lfs_conf.branch)
         context.add_output_metadata(metadata=metadata_extractor(data))
         return data
     except Exception as e:
@@ -37,7 +41,12 @@ def raw_direct_pickup_data(
     It reads the direct pickup CSV file and returns the raw data.
     """
     try:
-        data = csv_io.read(project_config.f_bike_rentals_direct_pickup)
+        # data = csv_io.read(
+        # project_config.f_bike_rentals_direct_pickup, lfs_conf.config
+        # )
+        data = lfs_conf.read_csv(
+            project_config.f_bike_rentals_direct_pickup, lfs_conf.branch
+        )
         context.add_output_metadata(metadata=metadata_extractor(data))
         return data
     except Exception as e:
@@ -55,7 +64,8 @@ def raw_weather_data(
     It reads the weather CSV file and returns the raw data.
     """
     try:
-        data = csv_io.read(project_config.f_weather)
+        # data = csv_io.read(project_config.f_weather, lfs_conf.config)
+        data = lfs_conf.read_csv(project_config.f_weather, lfs_conf.branch)
         context.add_output_metadata(metadata=metadata_extractor(data))
         return data
     except Exception as e:
@@ -73,7 +83,8 @@ def raw_holiday_data(
     It reads the holiday CSV file and returns the raw data.
     """
     try:
-        data = csv_io.read(project_config.f_holidays)
+        # data = csv_io.read(project_config.f_holidays, lfs_conf.config)
+        data = lfs_conf.read_csv(project_config.f_holidays, lfs_conf.branch)
         context.add_output_metadata(metadata=metadata_extractor(data))
         return data
     except Exception as e:

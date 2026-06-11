@@ -37,3 +37,12 @@ def init_mlflow() -> dict[str, object]:
         "CHAMPION_ALIAS": CHAMPION_ALIAS,
         "EXPERIMENT_NAME": EXPERIMENT_NAME,
     }
+
+
+def log_lakefs_metadata(*, asset_name, branch, commit_id, diff_summary):
+    """Log lakeFS metadata to MLflow."""
+    mlflow.log_param("asset_name", asset_name)
+    mlflow.log_param("lakefs_branch", branch)
+    mlflow.log_param("lakefs_commit", commit_id)
+
+    mlflow.log_metric("num_changes", len(diff_summary or []))
