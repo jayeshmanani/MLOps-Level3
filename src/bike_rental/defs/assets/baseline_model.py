@@ -8,6 +8,9 @@ from sklearn.metrics import mean_absolute_error, mean_squared_error, r2_score
 from bike_rental.defs.assets.helper import metadata_extractor
 from bike_rental.defs.resources.csv_io import CSVIO
 from bike_rental.defs.resources.project_config import ProjectConfig
+from lakefs_mod.lsf_config import LFSConfig
+
+lfs_conf = LFSConfig()
 
 DEFAULT_HOLDOUT_DAYS = 180
 
@@ -175,7 +178,13 @@ def base_model_hourly_no_loc(
     project_config: ProjectConfig,
 ) -> None:
     """Generate baseline predictions hourly without location information."""
-    data = csv_io.read(project_config.curated_path)
+    run_id = str(context.run.run_id).split("-")[0]
+    data = lfs_conf.read_run_data(
+        f_path=project_config.curated_path,
+        asset_name="curated_rental_dataset",
+        run_id=run_id,
+    )
+    # data = csv_io.read(project_config.curated_path)
     data["datetime"] = pd.to_datetime(data["datetime"])
     data = _help_prepare_hourly_data(data)
     holdout_days = DEFAULT_HOLDOUT_DAYS

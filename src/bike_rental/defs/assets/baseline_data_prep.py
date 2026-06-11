@@ -6,6 +6,9 @@ import pandas as pd
 from bike_rental.defs.assets.helper import metadata_extractor
 from bike_rental.defs.resources.csv_io import CSVIO
 from bike_rental.defs.resources.project_config import ProjectConfig
+from lakefs_mod.lsf_config import LFSConfig
+
+lfs_conf = LFSConfig()
 
 
 def _data_with_location_for_baseline(data: pd.DataFrame) -> pd.DataFrame:
@@ -70,7 +73,13 @@ def clean_data_for_baseline(
     This includes handling any remaining missing values and ensuring the
     datetime column is in the correct format.
     """
-    data = csv_io.read(project_config.curated_path)
+    run_id = str(context.run.run_id).split("-")[0]
+    data = lfs_conf.read_run_data(
+        f_path=project_config.curated_path,
+        asset_name="curated_rental_dataset",
+        run_id=run_id,
+    )
+    # data = csv_io.read_csv(project_config.curated_path)
     data = data[["datetime", "total_count", "location_id"]].copy()
     data["date"] = pd.to_datetime(data["datetime"]).dt.date
     rental_with_location = _data_with_location_for_baseline(data)

@@ -3,17 +3,17 @@
 from typing import Any
 
 import dagster as dg
-import load_dotenv
 import mlflow
 import mlflow.sklearn
 import pandas as pd
 
 from bike_rental.defs.resources.project_config import ProjectConfig
+from lakefs_mod.lsf_config import LFSConfig
 from models.factory import ModelFactory, ModelType
 from models.mlflow_utils import init_mlflow
 from models.trainer import Trainer
 
-load_dotenv.load_dotenv()
+lfs_conf = LFSConfig()
 mlflow_config = init_mlflow()
 
 try:
@@ -55,6 +55,9 @@ def train_and_score_all_models(
     project_config: ProjectConfig,
 ) -> dict[str, Any]:
     """Trains all models and returns ONLY the best candidate metadata."""
+    run_id = str(context.run.run_id).split("-")[0]
+    data_branch = lfs_conf.get_asset_branch("curated_rental_dataset", run_id)
+
     X_train = train_df[project_config.FEATURES]
     y_train = train_df[project_config.TARGET]
 
@@ -81,6 +84,13 @@ def train_and_score_all_models(
             metrics = trainer.evaluate(X_test, y_test)
 
             _log_model(model_type, model, params, metrics, X_train.columns)
+            mlflow.log_param("lakefs_training_data_branch", data_branch)
+
+            try:
+                commit_id = lfs_conf.repo.branch(data_branch).get_commit().id
+                mlflow.log_param("lakefs_training_data_commit", commit_id)
+            except Exception:
+                pass
 
             r2 = float(metrics.get("r2", float("-inf")))
 

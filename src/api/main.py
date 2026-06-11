@@ -1,5 +1,7 @@
 """Main API for the bike rental project."""
 
+from contextlib import asynccontextmanager
+
 from fastapi import FastAPI, HTTPException
 
 from bike_rental.defs.resources.project_config import ProjectConfig
@@ -7,7 +9,19 @@ from models.model_registry import get_champion, load_champion_model
 
 FeatureInput = ProjectConfig.get_feature_model()
 
-app = FastAPI(title="Bike Rental Prediction API")
+ml_models = {}
+
+
+@asynccontextmanager
+async def lifespan(app: FastAPI):
+    """Lifespan context manager to load champion model at startup."""
+    print("Loading champion model from MLflow...")
+    ml_models["champion"] = load_champion_model()
+    yield
+    ml_models.clear()
+
+
+app = FastAPI(title="Bike Rental Prediction API", lifespan=lifespan)
 
 
 @app.get("/current-champion")
@@ -37,9 +51,10 @@ def index():
 def predict(features: dict):
     """Bike Rental Prediction endpoint."""
     try:
-        model = load_champion_model()
-        features = FeatureInput(**features)
-        df = ProjectConfig.features_to_dataframe(features)
+        model = ml_models["champion"]
+
+        features_obj = FeatureInput(**features)
+        df = ProjectConfig.features_to_dataframe(features_obj)
         prediction = model.predict(df)
 
         return {"prediction": float(prediction[0]), "status": "success"}

@@ -35,7 +35,6 @@ class LFSConfig:
         if missing:
             raise OSError(f"Missing env vars: {missing}")
 
-        # Store just the repo name to cleanly use with the high-level SDK
         self.repo_name = os.getenv("LAKEFS_REPOSITORY")
         self.branch = os.getenv("LAKEFS_BRANCH", "main")
 
@@ -45,21 +44,17 @@ class LFSConfig:
             "password": os.getenv("LAKEFS_SECRET_ACCESS_KEY"),
         }
 
-        # fsspec client for Pandas / data operations
         self.fs = LakeFSFileSystem(
             **self.storage_options, create_branch_ok=True, source_branch="main"
         )
 
-        # High-level SDK Client initialization
         self._lakefs_client = Client(**self.storage_options)
 
-        # Initialize the repository object
         self.repo = lakefs.repository(
             self.repo_name, client=self._lakefs_client
         )
 
     def _path(self, branch: str, f_path: str) -> str:
-        # Fixed to construct the URI correctly for pandas/fsspec
         return f"lakefs://{self.repo_name}/{branch}/{f_path}"
 
     def read_csv(self, f_path: str, branch: str):
@@ -134,3 +129,21 @@ class LFSConfig:
     def get_asset_branch(self, asset_name: str, run_id: str):
         """Generate a unique branch name on the asset name and run ID."""
         return f"dg-{asset_name}-{run_id}"
+
+    def merge_to_main(self, branch: str):
+        """Merge a feature/run branch back into main."""
+        return self.repo.branch(branch).merge_into(self.repo.branch("main"))
+
+    def read_run_data(
+        self, f_path: str, asset_name: str, run_id: str
+    ) -> pd.DataFrame:
+        """Attempt to read from the run-specific branch, falls back to main."""
+        target_branch = self.get_asset_branch(asset_name, run_id)
+        try:
+            print(f"Attempting to read {f_path} from branch: {target_branch}")
+            return self.read_csv(f_path, branch=target_branch)
+        except Exception:
+            print(
+                f"Branch '{target_branch}' not found. Falling back to 'main'."
+            )
+            return self.read_csv(f_path, branch="main")
